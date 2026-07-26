@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Weekly Board — Meal Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Franklin:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --bg:#1E2A1F;
+    --bg-panel:#26342A;
+    --paper:#F5F0E3;
+    --paper-dim:#EAE3D1;
+    --ink:#22281E;
+    --ink-soft:#5C6355;
+    --him:#C97A3D;
+    --him-dim:#3A2C1E;
+    --her:#B5566B;
+    --her-dim:#3A2029;
+    --batch:#7C9A6E;
+    --fresh:#D9A441;
+    --line:#3C4A3B;
+    --rule: rgba(245,240,227,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    background-image:
+      radial-gradient(ellipse at top left, rgba(124,154,110,0.08), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(201,122,61,0.06), transparent 50%);
+    color:var(--paper);
+    font-family:'Libre Franklin', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:36px 20px 80px;}
+
+  header{text-align:center;padding-bottom:22px;margin-bottom:8px;position:relative;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--batch);margin-bottom:10px;
+  }
+  h1{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(42px,8vw,68px);
+    letter-spacing:.04em;
+    margin:0;
+    line-height:.95;
+    color:var(--paper);
+  }
+  h1 span{color:var(--fresh);}
+  .subhead{color:var(--ink-soft);color:#B9C0AE;font-size:14.5px;margin-top:10px;max-width:520px;margin-left:auto;margin-right:auto;line-height:1.55;}
+  .squiggle{width:140px;height:14px;margin:18px auto 0;opacity:.65;}
+
+  .legend{
+    display:flex;justify-content:center;gap:22px;flex-wrap:wrap;
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#B9C0AE;
+    margin-top:18px;
+  }
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .dot.him{background:var(--him);} .dot.her{background:var(--her);}
+  .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:2px 7px;border-radius:4px;
+    letter-spacing:.03em;
+  }
+  .tag.batch{background:rgba(124,154,110,.18);color:var(--batch);border:1px solid rgba(124,154,110,.4);}
+  .tag.fresh{background:rgba(217,164,65,.18);color:var(--fresh);border:1px solid rgba(217,164,65,.4);}
+
+  nav.weeks{
+    display:flex;justify-content:center;gap:8px;margin:0 0 6px;flex-wrap:wrap;
+  }
+  nav.weeks button{
+    font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.03em;
+    background:var(--bg-panel);color:#9AA491;border:1px solid var(--line);padding:8px 16px 6px;border-radius:8px;
+    cursor:pointer;transition:.15s;
+  }
+  nav.weeks button .n{display:block;font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.14em;color:#6E7864;margin-bottom:1px;}
+  nav.weeks button:hover{border-color:var(--him);color:var(--paper);}
+  nav.weeks button.active{background:var(--him);color:#22190F;border-color:var(--him);}
+  nav.weeks button.active .n{color:#4A2E14;}
+  .week-blurb{text-align:center;color:#9AA491;font-size:13px;max-width:560px;margin:0 auto 26px;line-height:1.5;}
+
+  nav.sections{
+    display:flex;justify-content:center;gap:8px;margin:34px 0 26px;flex-wrap:wrap;
+  }
+  nav.sections button{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    background:transparent;color:#9AA491;border:1px solid var(--line);padding:9px 16px;border-radius:999px;
+    cursor:pointer;transition:.15s;
+  }
+  nav.sections button:hover{border-color:var(--fresh);color:var(--paper);}
+  nav.sections button.active{background:var(--paper);color:var(--ink);border-color:var(--paper);font-weight:600;}
+
+  .view{display:none;} .view.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .day-tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 18px;scrollbar-width:none;}
+  .day-tabs::-webkit-scrollbar{display:none;}
+  .day-tab{
+    flex:0 0 auto;font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:.05em;
+    background:var(--bg-panel);color:#9AA491;border:1px solid var(--line);
+    padding:10px 18px 8px;border-radius:8px 8px 3px 3px;cursor:pointer;position:relative;
+    transition:.15s;
+  }
+  .day-tab .d{display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#6E7864;letter-spacing:.1em;margin-top:2px;}
+  .day-tab:hover{color:var(--paper);border-color:var(--fresh);}
+  .day-tab.active{background:var(--fresh);color:#22281E;border-color:var(--fresh);}
+  .day-tab.active .d{color:#4A3A12;}
+
+  .totals{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:26px;
+  }
+  .totals .card{
+    background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+  }
+  .totals .card.him{border-left:3px solid var(--him);}
+  .totals .card.her{border-left:3px solid var(--her);}
+  .totals .who{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;}
+  .totals .card.him .who{color:var(--him);} .totals .card.her .who{color:var(--her);}
+  .stat-row{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#C7CCBB;padding:2px 0;}
+  .stat-row b{color:var(--paper);}
+
+  .meal{
+    background:var(--paper);color:var(--ink);border-radius:12px;margin-bottom:14px;overflow:hidden;
+    box-shadow:0 6px 18px rgba(0,0,0,.18);
+  }
+  .meal-head{display:flex;align-items:center;justify-content:space-between;padding:15px 18px 12px;gap:10px;flex-wrap:wrap;}
+  .meal-slot{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);}
+  .meal-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.02em;margin:2px 0 0;line-height:1;}
+  .meal-cooked{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--batch);letter-spacing:.04em;margin-top:3px;}
+  .meal-macros{display:flex;gap:16px;padding:0 18px 16px;flex-wrap:wrap;}
+  .macro-block{flex:1;min-width:210px;background:var(--paper-dim);border-radius:8px;padding:10px 12px;}
+  .macro-block.him{border-top:2px solid var(--him);} .macro-block.her{border-top:2px solid var(--her);}
+  .macro-block .who{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;}
+  .macro-block.him .who{color:var(--him);} .macro-block.her .who{color:var(--her);}
+  .macro-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-family:'IBM Plex Mono',monospace;}
+  .macro-grid div{text-align:center;}
+  .macro-grid .v{font-size:14px;font-weight:600;color:var(--ink);}
+  .macro-grid .l{font-size:8.5px;color:var(--ink-soft);letter-spacing:.06em;text-transform:uppercase;}
+  details{border-top:1px solid rgba(34,40,30,.1);padding:0 18px;}
+  summary{cursor:pointer;padding:11px 0;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);list-style:none;display:flex;align-items:center;gap:6px;}
+  summary::-webkit-details-marker{display:none;}
+  summary:before{content:'+';font-size:14px;color:var(--fresh);}
+  details[open] summary:before{content:'–';}
+  .recipe-body{padding:0 0 16px;font-size:13.5px;line-height:1.6;}
+  .recipe-body h4{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);margin:10px 0 4px;}
+  .recipe-body ul{margin:0;padding-left:18px;}
+  .recipe-body p{margin:4px 0 0;}
+
+  .block-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:.02em;margin:0 0 4px;color:var(--paper);}
+  .block-sub{color:#9AA491;font-size:13.5px;margin-bottom:22px;}
+  .prep-day{background:var(--paper);color:var(--ink);border-radius:12px;padding:18px 20px;margin-bottom:14px;}
+  .prep-day .when{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--batch);margin-bottom:4px;}
+  .prep-day h3{font-family:'Bebas Neue',sans-serif;font-size:22px;margin:0 0 8px;letter-spacing:.02em;}
+  .prep-day ol{margin:0;padding-left:20px;font-size:13.5px;line-height:1.65;}
+  .fresh-note{background:var(--bg-panel);border:1px dashed var(--line);border-radius:10px;padding:14px 18px;font-size:13px;color:#C7CCBB;line-height:1.6;}
+
+  .trip-header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:30px 0 12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:8px;}
+  .trip-header:first-of-type{margin-top:0;}
+  .trip-label{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.02em;color:var(--paper);}
+  .trip-header.trip-1 .trip-label{color:var(--fresh);}
+  .trip-header.trip-2 .trip-label{color:var(--her);}
+  .trip-when{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA491;letter-spacing:.03em;}
+  .trip-count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--fresh);letter-spacing:.03em;white-space:nowrap;}
+  .grocery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+  .g-cat{background:var(--paper);color:var(--ink);border-radius:12px;padding:16px 18px;}
+  .g-cat h3{font-family:'Bebas Neue',sans-serif;font-size:19px;margin:0 0 8px;letter-spacing:.03em;color:var(--him);}
+  .g-cat ul{margin:0;padding-left:0;list-style:none;font-size:13px;line-height:1.7;}
+  .g-cat li{border-bottom:1px solid rgba(34,40,30,.08);padding:2px 0;}
+  .g-cat label{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;padding:5px 2px;border-radius:5px;transition:.15s;}
+  .g-cat label:hover{background:rgba(34,40,30,.05);}
+  .g-cat .item-left{display:flex;align-items:center;gap:9px;min-width:0;}
+  .g-cat .item-name{overflow-wrap:anywhere;}
+  .g-cat input[type=checkbox]{
+    appearance:none;-webkit-appearance:none;flex:0 0 auto;
+    width:17px;height:17px;border-radius:5px;border:1.5px solid var(--ink-soft);
+    cursor:pointer;position:relative;background:transparent;transition:.15s;
+  }
+  .g-cat input[type=checkbox]:checked{background:var(--batch);border-color:var(--batch);}
+  .g-cat input[type=checkbox]:checked::after{
+    content:'';position:absolute;left:4.5px;top:1px;width:4px;height:9px;
+    border:solid white;border-width:0 2px 2px 0;transform:rotate(40deg);
+  }
+  .g-cat li.checked .item-name, .g-cat li.checked .qty{opacity:.4;text-decoration:line-through;}
+  .g-cat .qty{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);white-space:nowrap;}
+  .g-note{margin-top:22px;font-size:13px;color:#9AA491;line-height:1.6;max-width:640px;}
+  .reset-link{background:none;border:none;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#6E7864;cursor:pointer;text-decoration:underline;padding:0;}
+  .reset-link:hover{color:var(--her);}
+
+  footer{text-align:center;margin-top:50px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7864;letter-spacing:.08em;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Two Plates · One Kitchen</div>
+    <h1>THE WEEKLY <span>BOARD</span></h1>
+    <p class="subhead">A 4-week rotation built around two smaller shop-and-batch-cook sessions each week — Sunday and Wednesday — so nothing sits in the fridge too long, plus breakfasts, salmon, and caprese night cooked fresh. Same targets and portions every week; the flavors rotate.</p>
+    <svg class="squiggle" viewBox="0 0 140 14"><path d="M0 7 Q 10 0, 20 7 T 40 7 T 60 7 T 80 7 T 100 7 T 120 7 T 140 7" fill="none" stroke="#D9A441" stroke-width="2" stroke-linecap="round"/></svg>
+    <div class="legend">
+      <span><span class="dot him"></span>Him — 174 lb, active — target 2,700–3,000 cal / ~190g protein</span>
+      <span><span class="dot her"></span>Her — 140 lb — target ~1,700 cal / ~145g protein</span>
+    </div>
+    <div class="legend" style="margin-top:8px;">
+      <span class="tag batch">🔁 batch-cooked</span>
+      <span class="tag fresh">🍳 cooked fresh</span>
+    </div>
+  </header>
+
+  <nav class="weeks" id="weekNav"></nav>
+  <p class="week-blurb" id="weekBlurb"></p>
+
+  <nav class="sections">
+    <button class="active" data-view="week">Week Plan</button>
+    <button data-view="prep">Prep Schedule</button>
+    <button data-view="grocery">Grocery List</button>
+  </nav>
+
+  <section id="week" class="view active">
+    <div class="day-tabs" id="dayTabs"></div>
+    <div class="totals" id="totals"></div>
+    <div id="meals"></div>
+  </section>
+
+  <section id="prep" class="view">
+    <div class="block-title">Batch Prep Schedule</div>
+    <div class="block-sub">Two smaller cooking sessions instead of one big one, so nothing sits in the fridge more than 3–4 days. Same rhythm every week — only the recipes change.</div>
+    <div id="prepContent"></div>
+  </section>
+
+  <section id="grocery" class="view">
+    <div class="block-title">Grocery List</div>
+    <div class="block-sub">Split into two fresh-food runs so nothing spoils by week's end — plus a pantry list you can grab anytime.</div>
+
+    <div class="trip-header">
+      <span class="trip-label">Pantry</span>
+      <span class="trip-when">Buy once — keeps all week</span>
+      <span class="trip-count" id="countPantry"></span>
+      <button class="reset-link" data-reset="pantry">Reset</button>
+    </div>
+    <div class="grocery-grid" id="groceryPantry"></div>
+
+    <div class="trip-header trip-1">
+      <span class="trip-label">🛒 Trip 1 — Saturday</span>
+      <span class="trip-when">Feeds Sunday's batch cook + Mon, Tue, Wed</span>
+      <span class="trip-count" id="countTrip1"></span>
+      <button class="reset-link" data-reset="trip1">Reset</button>
+    </div>
+    <div class="grocery-grid" id="groceryTrip1"></div>
+
+    <div class="trip-header trip-2">
+      <span class="trip-label">🛒 Trip 2 — Wednesday</span>
+      <span class="trip-when">Feeds Wednesday's batch cook + Thu, Fri, Sat, Sun</span>
+      <span class="trip-count" id="countTrip2"></span>
+      <button class="reset-link" data-reset="trip2">Reset</button>
+    </div>
+    <div class="grocery-grid" id="groceryTrip2"></div>
+
+    <p class="g-note">Fresh proteins, dairy, and produce are split across the two trips above so everything stays close to its purchase date. The pantry list (rice, oats, pasta, nuts, spices, protein powder) is shelf-stable — grab it whenever's convenient. A few items — fresh mozzarella, basil, asparagus/green beans, cherry tomatoes — are easy Whole Foods or Target add-ons if Aldi doesn't have them that week. Checked-off items are saved automatically.</p>
+  </section>
+
+  <footer>MACROS ARE ESTIMATES · EXPECT ±10% REAL-WORLD VARIANCE</footer>
+</div>
+
+<script>
+const MACROS = {
+  eggBF:      {him:{cal:600,p:32,c:43,f:34,fb:16}, her:{cal:354,p:19,c:22,f:25,fb:8}},
+  oatsBF:     {him:{cal:588,p:44,c:72,f:9,fb:17},  her:{cal:349,p:24,c:44,f:6,fb:10.5}},
+  smoothieBF: {him:{cal:521,p:43,c:68,f:8,fb:14},  her:{cal:291,p:24,c:36,f:5,fb:8.5}},
+  chickenLunch:{him:{cal:838,p:64,c:58,f:38,fb:12}, her:{cal:546,p:40,c:39,f:25,fb:8}},
+  turkeyLunch: {him:{cal:707,p:42,c:80,f:25,fb:14}, her:{cal:453,p:33,c:47,f:16,fb:13}},
+  beefDinner:  {him:{cal:875,p:56,c:82,f:34,fb:7.5},her:{cal:566,p:35,c:55,f:22,fb:5}},
+  salmonDinner:{him:{cal:774,p:58,c:53,f:44,fb:9},  her:{cal:462,p:36,c:28,f:23,fb:5.5}},
+  tilapiaDinner:{him:{cal:823,p:63,c:69,f:33,fb:14},her:{cal:471,p:44,c:44,f:13,fb:7}},
+  capreseDinner:{him:{cal:878,p:87,c:58,f:39,fb:15},her:{cal:445,p:43,c:31,f:18,fb:8}},
+  southwestBowlDinner:{him:{cal:884,p:71,c:69,f:37,fb:13}, her:{cal:489,p:37,c:45,f:19,fb:7.5}},
+  turkeyFreshDinner:{him:{cal:811,p:61,c:71,f:30,fb:7}, her:{cal:487,p:36,c:41,f:19,fb:4}},
+  s1:{him:{cal:380,p:40,c:39,f:5,fb:10.5}, her:{cal:241,p:27,c:23,f:3,fb:6}},
+  s2:{him:{cal:290,p:7,c:31,f:18,fb:7.5},  her:{cal:192,p:4,c:28,f:9,fb:6}},
+  s3:{him:{cal:373,p:34,c:42,f:9,fb:3},    her:{cal:319,p:33,c:28,f:9,fb:1.6}},
+  s4:{him:{cal:391,p:21,c:26,f:29,fb:5},   her:{cal:260,p:14,c:18,f:20,fb:3.5}},
+  s5:{him:{cal:277,p:20,c:17,f:15,fb:3},   her:{cal:205,p:14,c:16,f:10,fb:3}},
+};
+
+const DAYS = [
+  {label:"Mon", date:"Day 1", slots:{Breakfast:"bf1", Lunch:"la", Dinner:"da", "Snack 1":"s1", "Snack 2":"s3"}},
+  {label:"Tue", date:"Day 2", slots:{Breakfast:"bf2", Lunch:"la", Dinner:"da", "Snack 1":"s2", "Snack 2":"s4"}},
+  {label:"Wed", date:"Day 3", note:"🛒🔥 Batch #2", slots:{Breakfast:"bf3", Lunch:"la", Dinner:"da", "Snack 1":"s1", "Snack 2":"s5"}},
+  {label:"Thu", date:"Day 4", slots:{Breakfast:"bf1", Lunch:"lb", Dinner:"de", "Snack 1":"s3", "Snack 2":"s4"}},
+  {label:"Fri", date:"Day 5", slots:{Breakfast:"bf2", Lunch:"lb", Dinner:"db", "Snack 1":"s1", "Snack 2":"s2"}},
+  {label:"Sat", date:"Day 6", slots:{Breakfast:"bf3", Lunch:"lb", Dinner:"dc", "Snack 1":"s3", "Snack 2":"s5"}},
+  {label:"Sun", date:"Day 7", note:"🛒🔥 Batch #1", slots:{Breakfast:"bf1", Lunch:"lb", Dinner:"dd", "Snack 1":"s1", "Snack 2":"s4"}},
+];
+
+const PANTRY = {
+  "Grains, Pasta &amp; Baking":[["Brown rice","2 lb bag"],["Rolled oats","1 container"],["Brami protein pasta","1 box"],["Stone-mill wheat bread","1 loaf"]],
+  "Nuts, Seeds &amp; Fats":[["Chia seeds","1 bag"],["Raw almonds","12 oz"],["Almond butter","1 jar"],["Olive oil","—"],["Toasted sesame oil","1 small bottle (Week 4)"],["Sesame seeds","1 small bag (Week 4)"],["Grass-fed butter","1 stick"]],
+  "Other":[["Protein powder","1 tub"],["Monk fruit sweetener","—"],["Dried spices","garlic powder, paprika, smoked paprika, thyme, oregano, cumin, chili powder, ground ginger"],["Balsamic vinegar","—"],["Low-sodium tamari or coconut aminos","1 bottle (Week 4)"]],
+};
+
+const week1 = {
+  name:"Week 1", theme:"Classic &amp; Herb",
+  blurb:"The baseline rotation — herb-roasted chicken, beef &amp; rice, and turkey chili.",
+  recipes:{
+    bf1:{name:"Egg &amp; Veggie Scramble + Avocado Toast", tag:"fresh", macroKey:"eggBF",
+      ing:["Pasture eggs — 2 (her) / 3 (him)","Diced bell pepper &amp; spinach — ½ cup (her) / 1 cup (him)","Grass-fed butter — 1 tsp","Stone-mill wheat toast — 1 slice (her) / 2 (him)","Avocado — ¼ (her) / ½ (him)"],
+      method:"Sauté veggies in butter 3 min, add eggs, scramble. Serve with toast + avocado."},
+    bf2:{name:"Protein Oatmeal with Berries &amp; Chia", tag:"fresh", macroKey:"oatsBF",
+      ing:["Dry oats — ½ cup (her) / ¾ cup (him)","A2 milk — ¼ cup (her) / ½ cup (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"],
+      method:"Cook oats in milk + water, stir in protein powder off-heat, top with berries + chia."},
+    bf3:{name:"Kefir Berry Protein Smoothie", tag:"fresh", macroKey:"smoothieBF",
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — 1 cup (her) / 1.5 cups (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Banana — ½ (him only)","Ice"],
+      method:"Blend everything until smooth."},
+    la:{name:"Herb-Roasted Chicken Thigh Bowl", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"chickenLunch",
+      ing:["Chicken thighs — 5 oz (her) / 8 oz (him)","Sweet potato — 1 cup (her) / 1.5 cups (him)","Broccoli — 1 cup (her) / 1.5 cups (him)","Olive oil, garlic powder, paprika, thyme, salt/pepper"],
+      method:"Batch: 2.5 lbs chicken thighs + 2.5 lbs sweet potato + 1.75 lbs broccoli, tossed in oil/spices, roasted 425°F 25–30 min. Makes 3 servings each — covers Mon–Wed lunches."},
+    da:{name:"Grass-Fed Beef &amp; Rice Skillet", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"beefDinner",
+      ing:["Beef &amp; rice skillet — 1.25 cups (her) / 2 cups (him)"],
+      method:"Batch: brown 2 lbs grass-fed ground beef with peppers/onion/spices, stir in diced tomatoes, fold in cooked rice. Makes 3 servings each — covers Mon–Wed dinners."},
+    lb:{name:"Ground Turkey Sweet Potato Chili", tag:"batch", cooked:"Batch-cooked Wednesday", macroKey:"turkeyLunch",
+      ing:["Ground turkey chili — 1 bowl (her) / 1.5 bowls (him)","Brown rice — ½ cup (her) / 1 cup (him)","Avocado — ¼ (her) / ½ (him)"],
+      method:"Batch: brown 3 lbs turkey with onion &amp; pepper, add diced tomatoes, sweet potato, broth + chili powder/cumin/garlic, simmer 25 min. Makes 4 servings each — covers Thu–Sun lunches."},
+    de:{name:"Turkey Taco Skillet with Rice &amp; Peppers", tag:"fresh", macroKey:"turkeyFreshDinner",
+      ing:["Ground turkey — 4 oz (her) / 7 oz (him)","Cooked rice — ¾ cup (her) / 1.25 cups (him)","Bell pepper &amp; onion, diced — ½ cup (her) / 1 cup (him)","Shredded cheese — 1 oz (her) / 1.5 oz (him)","Olive oil, cumin, chili powder, salt/pepper"],
+      method:"Quick weeknight skillet (~20 min): brown turkey with peppers/onion and spices, stir through rice, top with cheese. Cooked fresh Thursday."},
+    db:{name:"Baked Salmon, Potato &amp; Asparagus", tag:"fresh", macroKey:"salmonDinner",
+      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Diced potato — ¾ cup (her) / 1.5 cups (him)","Asparagus — 1 cup (her) / 1.5 cups (him)","Olive oil, lemon, salt/pepper"],
+      method:"Roast veg at 425°F 20 min, add salmon for the final 12–15 min until it flakes."},
+    dc:{name:"Caprese Salad with Brami Pasta &amp; Chicken", tag:"fresh", macroKey:"capreseDinner",
+      ing:["Brami protein pasta — 1.5 oz dry (her) / 3 oz (him)","Cooked chicken, sliced — 3 oz (her) / 6 oz (him)","Cherry tomatoes — 1 cup (her) / 1.5 cups (him)","Fresh mozzarella — 1 oz (her) / 2 oz (him)","Basil, olive oil, balsamic, salt/pepper"],
+      method:"Cook pasta per package, cool. Toss with tomatoes, torn mozzarella, basil, oil + balsamic. Top with sliced chicken."},
+    dd:{name:"Baked Salmon, Sweet Potato &amp; Green Beans", tag:"fresh", macroKey:"salmonDinner",
+      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Sweet potato — ¾ cup (her) / 1.5 cups (him)","Green beans — 1 cup (her) / 1.5 cups (him)","Olive oil, lemon, salt/pepper"],
+      method:"Roast veg at 425°F 20 min, add salmon for the final 12–15 min until it flakes."},
+    s1:{name:"Greek Yogurt, Berries &amp; Chia", tag:"fresh", macroKey:"s1",
+      ing:["Plain fat-free Greek yogurt — 1 cup (her) / 1.5 cups (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"], method:"Stir together."},
+    s2:{name:"Apple + Almond Butter", tag:"fresh", macroKey:"s2",
+      ing:["Apple — 1","Almond butter — 1 tbsp (her) / 2 tbsp (him)"], method:"Slice and dip."},
+    s3:{name:"Protein Shake", tag:"fresh", macroKey:"s3",
+      ing:["Protein powder — 1 scoop","A2 milk — 1 cup","Banana — ½ (her) / 1 (him)"], method:"Blend or shake."},
+    s4:{name:"Kefir + Almonds", tag:"fresh", macroKey:"s4",
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Raw almonds — 1 oz (her) / 1.5 oz (him)"], method:"Pour and portion."},
+    s5:{name:"Orange + Hard-Boiled Eggs", tag:"fresh", macroKey:"s5",
+      ing:["Orange — 1","Pasture eggs, hard-boiled — 2 (her) / 3 (him)"], method:"Peel and go."},
+  },
+  trip1:{
+    "Proteins &amp; Dairy":[["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef","2 lbs"],["Pasture-raised eggs","1 dozen"],["Plain fat-free Greek yogurt","1 (32oz) tub"],["Kefir, plain","2 (32oz) bottles"],["A2 grass-fed milk","1 quart"]],
+    "Produce":[["Sweet potatoes","2.5 lbs"],["Broccoli","1.75 lbs"],["Bell peppers","2"],["Onion","1"],["Diced tomatoes, no added sugar","1 can"],["Avocado","1"],["Mixed berries","3 lbs"],["Apple","2"],["Orange","2"],["Banana","2"],["Spinach or mixed greens","1 small bag"],["Garlic","as needed"]],
+  },
+  trip2:{
+    "Proteins &amp; Dairy":[["Ground turkey, 93% lean","3.5 lbs"],["Chicken breast/thigh (for caprese)","¾ lb"],["Salmon fillets","2 lbs"],["Pasture-raised eggs","1.5 dozen"],["Plain fat-free Greek yogurt","1 (32oz) tub"],["Kefir, plain","2 (32oz) bottles"],["A2 grass-fed milk","1 quart"],["Fresh mozzarella","3 oz"],["Shredded cheese","2.5 oz"]],
+    "Produce":[["Sweet potatoes","3.5 lbs"],["Bell peppers","4"],["Onion","1"],["Diced tomatoes, no added sugar","1 can"],["Cherry tomatoes","1 pint"],["Potatoes, regular","1 lb"],["Asparagus","¾ lb"],["Green beans","¾ lb"],["Avocados","4"],["Mixed berries","3 lbs"],["Apple","2"],["Orange","2"],["Banana","3"],["Fresh basil","1 bunch"],["Lemon","2"],["Garlic","as needed"]],
+  },
+};
+
+const week2 = {
+  name:"Week 2", theme:"Mediterranean",
+  blurb:"Lemon, oregano, tomato &amp; zucchini in place of the herb/chili flavors — same portions, same targets.",
+  recipes:{
+    bf1:{name:"Tomato &amp; Spinach Egg Scramble + Avocado Toast", tag:"fresh", macroKey:"eggBF",
+      ing:["Pasture eggs — 2 (her) / 3 (him)","Diced tomato &amp; spinach — ½ cup (her) / 1 cup (him)","Grass-fed butter — 1 tsp","Stone-mill wheat toast — 1 slice (her) / 2 (him)","Avocado — ¼ (her) / ½ (him)"],
+      method:"Sauté veggies in butter 3 min, add eggs, scramble. Serve with toast + avocado."},
+    bf2:{name:"Protein Oatmeal with Berries &amp; Chia", tag:"fresh", macroKey:"oatsBF",
+      ing:["Dry oats — ½ cup (her) / ¾ cup (him)","A2 milk — ¼ cup (her) / ½ cup (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"],
+      method:"Cook oats in milk + water, stir in protein powder off-heat, top with berries + chia."},
+    bf3:{name:"Kefir Berry Protein Smoothie", tag:"fresh", macroKey:"smoothieBF",
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — 1 cup (her) / 1.5 cups (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Banana — ½ (him only)","Ice"],
+      method:"Blend everything until smooth."},
+    la:{name:"Lemon-Oregano Chicken Thigh Bowl with Green Beans", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"chickenLunch",
+      ing:["Chicken thighs — 5 oz (her) / 8 oz (him)","Sweet potato — 1 cup (her) / 1.5 cups (him)","Green beans — 1 cup (her) / 1.5 cups (him)","Olive oil, lemon, dried oregano, garlic, salt/pepper"],
+      method:"Batch: 2.5 lbs chicken thighs + 2.5 lbs sweet potato + 1.75 lbs green beans, tossed in oil/lemon/oregano, roasted 425°F 25–30 min. Covers Mon–Wed lunches."},
+    da:{name:"Beef &amp; Rice Skillet with Zucchini &amp; Tomato", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"beefDinner",
+      ing:["Beef &amp; rice skillet — 1.25 cups (her) / 2 cups (him)"],
+      method:"Batch: brown 2 lbs grass-fed ground beef with zucchini, onion, diced tomato, oregano &amp; garlic, fold in cooked rice. Covers Mon–Wed dinners."},
+    lb:{name:"Mediterranean Turkey &amp; Sweet Potato Skillet", tag:"batch", cooked:"Batch-cooked Wednesday", macroKey:"turkeyLunch",
+      ing:["Mediterranean turkey skillet — 1 bowl (her) / 1.5 bowls (him)","Brown rice — ½ cup (her) / 1 cup (him)","Avocado — ¼ (her) / ½ (him)"],
+      method:"Batch: brown 3 lbs turkey with onion, bell pepper, diced tomato, oregano, lemon &amp; garlic, simmer with sweet potato + broth 25 min. Covers Thu–Sun lunches."},
+    de:{name:"Lemon-Oregano Turkey Skillet with Rice &amp; Zucchini", tag:"fresh", macroKey:"turkeyFreshDinner",
+      ing:["Ground turkey — 4 oz (her) / 7 oz (him)","Cooked rice — ¾ cup (her) / 1.25 cups (him)","Zucchini, diced — ½ cup (her) / 1 cup (him)","Shredded cheese — 1 oz (her) / 1.5 oz (him)","Olive oil, lemon, oregano, salt/pepper"],
+      method:"Quick weeknight skillet (~20 min): brown turkey with zucchini, lemon &amp; oregano, stir through rice, top with cheese. Cooked fresh Thursday."},
+    db:{name:"Pan-Seared Salmon with Zucchini &amp; Potato", tag:"fresh", macroKey:"salmonDinner",
+      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Diced potato — ¾ cup (her) / 1.5 cups (him)","Zucchini — 1 cup (her) / 1.5 cups (him)","Olive oil, lemon, garlic, salt/pepper"],
+      method:"Roast potato &amp; zucchini at 425°F 20 min. Pan-sear salmon skin-down 4 min, flip 3 min, finish with lemon &amp; garlic."},
+    dc:{name:"Greek Chicken &amp; Brami Pasta Salad", tag:"fresh", macroKey:"capreseDinner",
+      ing:["Brami protein pasta — 1.5 oz dry (her) / 3 oz (him)","Cooked chicken, sliced — 3 oz (her) / 6 oz (him)","Cucumber &amp; cherry tomato — 1 cup (her) / 1.5 cups (him)","Feta or mozzarella — 1 oz (her) / 2 oz (him)","Red onion, oregano, olive oil, lemon, salt/pepper"],
+      method:"Cook pasta per package, cool. Toss with cucumber, tomato, red onion, cheese, oregano, olive oil + lemon. Top with sliced chicken."},
+    dd:{name:"Lemon-Oregano Baked Tilapia with Sweet Potato &amp; Asparagus", tag:"fresh", macroKey:"tilapiaDinner",
+      ing:["Tilapia fillet — 5 oz (her) / 7 oz (him)","Sweet potato — ¾ cup (her) / 1 cup (him)","Asparagus — 1 cup (her) / 1.5 cups (him)","Olive oil, lemon, oregano, garlic, salt/pepper"],
+      method:"Roast veg at 425°F 20 min, add tilapia (lemon-oregano rub) for the final 10 min until it flakes."},
+    s1:{name:"Greek Yogurt, Berries &amp; Chia", tag:"fresh", macroKey:"s1",
+      ing:["Plain fat-free Greek yogurt — 1 cup (her) / 1.5 cups (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"], method:"Stir together."},
+    s2:{name:"Apple + Almond Butter", tag:"fresh", macroKey:"s2",
+      ing:["Apple — 1","Almond butter — 1 tbsp (her) / 2 tbsp (him)"], method:"Slice and dip."},
+    s3:{name:"Protein Shake", tag:"fresh", macroKey:"s3",
+      ing:["Protein powder — 1 scoop","A2 milk — 1 cup","Banana — ½ (her) / 1 (him)"], method:"Blend or shake."},
+    s4:{name:"Kefir + Almonds", tag:"fresh", macroKey:"s4",
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Raw almonds — 1 oz (her) / 1.5 oz (him)"], method:"Pour and portion."},
+    s5:{name:"Orange + Hard-Boiled Eggs", tag:"fresh", macroKey:"s5",
+      ing:["Orange — 1","Pasture eggs, hard-boiled — 2 (her) / 3 (him)"], method:"Peel and go."},
+  },
+  trip1:{
+    "Proteins &amp; Dairy":[["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef","2 lbs"],["Pasture-raised eggs","1 dozen"],["Plain fat-free Greek yogurt","1 (32oz) tub"],["Kefir, plain","2 (32oz) bottles"],["A2 grass-fed milk","1 quart"]],
+    "Produce":[["Sweet potatoes","2.5 lbs"],["Green beans","1.75 lbs"],["Zucchini","1.5 lbs"],["Onion","1"],["Diced tomatoes, no added sugar","1 can"],["Avocado","1"],["Mixed berries","3 lbs"],["Apple","2"],["Orange","2"],["Banana","2"],["Spinach or mixed greens","1 small bag"],["Lemon","3"],["Garlic","as needed"]],
+  },
+  trip2:{
+    "Proteins &amp; Dairy":[["Ground turkey, 93% lean","3.5 lbs"],["Chicken breast/thigh (for pasta salad)","¾ lb"],["Salmon fillets","1 lb"],["Tilapia fillets","1 lb"],["Pasture-raised eggs","1.5 dozen"],["Plain fat-free Greek yogurt","1 (32oz) tub"],["Kefir, plain","2 (32oz) bottles"],["A2 grass-fed milk","1 quart"],["Feta or mozzarella","3 oz"],["Shredded cheese","1.5 oz"]],
+    "Produce":[["Sweet potatoes","3.5 lbs"],["Bell peppers","2"],["Zucchini","1.5 lbs"],["Onion + red onion","2"],["Diced tomatoes, no added sugar","1 can"],["Cucumber","1"],["Cherry tomatoes","1 pint"],["Potatoes, regular","1 lb"],["Asparagus","¾ lb"],["Avocados","4"],["Mixed berries","3 lbs"],["Apple","2"],["Orange","2"],["Banana","3"],["Fresh basil","1 bunch"],["Lemon","4"],["Garlic","as needed"]],
+  },
+};
+
+const week3 = {
+  name:"Week 3", theme:"Southwest",
+  blurb:"Chili-lime, smoked paprika &amp; peppers throughout — same portions, same targets.",
+  recipes:{
+    bf1:{name:"Southwest Egg Scramble + Avocado Toast", tag:"fresh", macroKey:"eggBF",
+      ing:["Pasture eggs — 2 (her) / 3 (him)","Diced bell pepper &amp; onion — ½ cup (her) / 1 cup (him)","Grass-fed butter — 1 tsp","Stone-mill wheat toast — 1 slice (her) / 2 (him)","Avocado — ¼ (her) / ½ (him)","Pinch chili powder"],
+      method:"Sauté veggies + chili powder in butter 3 min, add eggs, scramble. Serve with toast + avocado."},
+    bf2:{name:"Cinnamon-Apple Protein Oatmeal", tag:"fresh", macroKey:"oatsBF",
+      ing:["Dry oats — ½ cup (her) / ¾ cup (him)","A2 milk — ¼ cup (her) / ½ cup (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Diced apple — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Cinnamon, monk fruit, to taste"],
+      method:"Cook oats in milk + water, stir in protein powder off-heat, top with apple, chia &amp; cinnamon."},
+    bf3:{name:"Banana-Cinnamon Kefir Protein Smoothie", tag:"fresh", macroKey:"smoothieBF",
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Banana — ½ (her) / 1 (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Cinnamon, ice"],
+      method:"Blend everything until smooth."},
+    la:{name:"Chili-Lime Chicken Thigh Bowl with Peppers", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"chickenLunch",
+      ing:["Chicken thighs — 5 oz (her) / 8 oz (him)","Sweet potato — 1 cup (her) / 1.5 cups (him)","Bell peppers — 1 cup (her) / 1.5 cups (him)","Olive oil, lime, chili powder, cumin, garlic, salt/pepper"],
+      method:"Batch: 2.5 lbs chicken thighs + 2.5 lbs sweet potato + 1.75 lbs peppers, tossed in oil/lime/chili-cumin, roasted 425°F 25–30 min. Covers Mon–Wed lunches."},
+    da:{name:"Southwest Beef &amp; Rice Skillet with Peppers &amp; Tomato", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"beefDinner",
+      ing:["Beef &amp; rice skillet — 1.25 cups (her) / 2 cups (him)"],
+      method:"Batch: brown 2 lbs grass-fed ground beef with peppers/onion, smoked paprika &amp; cumin, stir in diced tomatoes, fold in cooked rice. Covers Mon–Wed dinners."},
+    lb:{name:"Smoky Turkey Taco Bowl with Sweet Potato &amp; Peppers", tag:"batch", cooked:"Batch-cooked Wednesday", macroKey:"turkeyLunch",
+      ing:["Smoky turkey taco bowl — 1 bowl (her) / 1.5 bowls (him)","Brown rice — ½ cup (her) / 1 cup (him)","Avocado — ¼ (her) / ½ (him)"],
+      method:"Batch: brown 3 lbs turkey with onion &amp; peppers, taco seasoning (chili, cumin, smoked paprika, garlic), diced tomatoes, sweet potato + broth, simmer 25 min. Covers Thu–Sun lunches."},
+    de:{name:"Chili-Lime Turkey Skillet with Rice &amp; Peppers", tag:"fresh", macroKey:"turkeyFreshDinner",
+      ing:["Ground turkey — 4 oz (her) / 7 oz (him)","Cooked rice — ¾ cup (her) / 1.25 cups (him)","Bell pepper &amp; onion, diced — ½ cup (her) / 1 cup (him)","Shredded cheese — 1 oz (her) / 1.5 oz (him)","Olive oil, lime, chili powder, cumin, salt/pepper"],
+      method:"Quick weeknight skillet (~20 min): brown turkey with peppers, lime &amp; chili-cumin, stir through rice, top with cheese. Cooked fresh Thursday."},
+    db:{name:"Chili-Lime Baked Salmon with Sweet Potato &amp; Asparagus", tag:"fresh", macroKey:"salmonDinner",
+      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Sweet potato, diced — ¾ cup (her) / 1.5 cups (him)","Asparagus — 1 cup (her) / 1.5 cups (him)","Olive oil, lime, chili powder, salt/pepper"],
+      method:"Roast veg at 425°F 20 min, add salmon (lime + chili rub) for the final 12–15 min until it flakes."},
+    dc:{name:"Southwest Chicken &amp; Rice Bowl with Avocado-Lime Crema", tag:"fresh", macroKey:"southwestBowlDinner",
+      ing:["Cooked chicken, sliced — 4 oz (her) / 8 oz (him)","Cooked rice — ⅔ cup (her) / 1 cup (him)","Bell peppers, sautéed — ⅔ cup (her) / 1 cup (him)","Avocado — ¼ (her) / ½ (him)","Plain Greek yogurt (for crema) — 2 tbsp (her) / ¼ cup (him)","Lime, cumin, chili powder, salt/pepper"],
+      method:"Season and cook chicken with cumin/chili powder, slice. Sauté peppers. Whisk yogurt + lime juice + a pinch of chili for the crema. Build the bowl: rice, peppers, chicken, avocado, drizzle of crema."},
+    dd:{name:"Blackened Tilapia with Green Beans &amp; Potato", tag:"fresh", macroKey:"tilapiaDinner",
+      ing:["Tilapia fillet — 5 oz (her) / 7 oz (him)","Diced potato — ¾ cup (her) / 1 cup (him)","Green beans — 1 cup (her) / 1.5 cups (him)","Olive oil, smoked paprika, cumin, chili powder, lime"],
+      method:"Roast potato &amp; green beans at 425°F 20 min. Coat tilapia in blackening spice, pan-sear 3 min per side until it flakes."},
+    s1:{name:"Greek Yogurt, Berries &amp; Chia", tag:"fresh", macroKey:"s1",
+      ing:["Plain fat-free Greek yogurt — 1 cup (her) / 1.5 cups (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"], method:"Stir together."},
+    s2:{name:"Apple + Almond Butter", tag:"fresh", macroKey:"s2",
+      ing:["Apple — 1","Almond butter — 1 tbsp (her) / 2 tbsp (him)"], method:"Slice and dip."},
+    s3:{name:"Protein Shake", tag:"fresh", macroKey:"s3",
+      ing:["Protein powder — 1 scoop","A2 milk — 1 cup","Banana — ½ (her) / 1 (him)"], method:"Blend or shake."},
+    s4:{name:"Kefir + Almonds", tag:"fresh", macroKey:"s4",
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Raw almonds — 1 oz (her) / 1.5 oz (him)"], method:"Pour and portion."},
+    s5:{name:"Orange + Hard-Boiled Eggs", tag:"fresh", macroKey:"s5",
+      ing:["Orange — 1","Pasture eggs, hard-boiled — 2 (her) / 3 (him)"], method:"Peel and go."},
+  },
+  trip1:{
+    "Proteins &amp; Dairy":[["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef","2 lbs"],["Pasture-raised eggs","1 dozen"],["Plain fat-free Greek yogurt","1 (32oz) tub"],["Kefir, plain","2 (32oz) bottles"],["A2 grass-fed milk","1 quart"]],
+    "Produce":[["Sweet potatoes","2.5 lbs"],["Bell peppers","4"],["Onion","1"],["Diced tomatoes, no added sugar","1 can"],["Avocado","1"],["Mixed berries","3 lbs"],["Apple","3"],["Orange","2"],["Banana","3"],["Lime","2"],["Garlic","as needed"]],
+  },
+  trip2:{
+    "Proteins &amp; Dairy":[["Ground turkey, 93% lean","3.5 lbs"],["Chicken breast/thigh (for rice bowl)","¾ lb"],["Salmon fillets","1 lb"],["Tilapia fillets","1 lb"],["Pasture-raised eggs","1.5 dozen"],["Plain fat-free Greek yogurt","1 (32oz) tub"],["Kefir, plain","2 (32oz) bottles"],["A2 grass-fed milk","1 quart"],["Shredded cheese","1.5 oz"]],
+    "Produce":[["Sweet potatoes","3.5 lbs"],["Bell peppers","5"],["Onion","1"],["Diced tomatoes, no added sugar","1 can"],["Potatoes, regular","1 lb"],["Asparagus","¾ lb"],["Green beans","¾ lb"],["Avocados","4"],["Mixed berries","3 lbs"],["Apple","2"],["Orange","2"],["Banana","3"],["Lime","4"],["Garlic","as needed"]],
+  },
+};
+
+const week4 = {
+  name:"Week 4", theme:"Ginger &amp; Sesame",
+  blurb:"Ginger, garlic, scallion &amp; sesame in place of the herb/chili/lemon flavors — same portions, same targets.",
+  recipes:{
+    bf1:{name:"Scallion Veggie Egg Scramble + Avocado Toast", tag:"fresh", macroKey:"eggBF",
+      ing:["Pasture eggs — 2 (her) / 3 (him)","Diced bell pepper &amp; scallion — ½ cup (her) / 1 cup (him)","Grass-fed butter — 1 tsp","Stone-mill wheat toast — 1 slice (her) / 2 (him)","Avocado — ¼ (her) / ½ (him)"],
+      method:"Sauté veggies in butter 3 min, add eggs, scramble. Serve with toast + avocado."},
+    bf2:{name:"Protein Oatmeal with Berries &amp; Chia", tag:"fresh", macroKey:"oatsBF",
+      ing:["Dry oats — ½ cup (her) / ¾ cup (him)","A2 milk — ¼ cup (her) / ½ cup (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"],
+      method:"Cook oats in milk + water, stir in protein powder off-heat, top with berries + chia."},
+    bf3:{name:"Kefir Berry Protein Smoothie", tag:"fresh", macroKey:"smoothieBF",
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — 1 cup (her) / 1.5 cups (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Banana — ½ (him only)","Ice"],
+      method:"Blend everything until smooth."},
+    la:{name:"Ginger-Garlic Chicken Thigh Bowl with Broccoli", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"chickenLunch",
+      ing:["Chicken thighs — 5 oz (her) / 8 oz (him)","Sweet potato — 1 cup (her) / 1.5 cups (him)","Broccoli — 1 cup (her) / 1.5 cups (him)","Olive oil, fresh ginger, garlic, low-sodium tamari, salt/pepper"],
+      method:"Batch: 2.5 lbs chicken thighs + 2.5 lbs sweet potato + 1.75 lbs broccoli, tossed in oil/ginger/garlic/tamari, roasted 425°F 25–30 min. Covers Mon–Wed lunches."},
+    da:{name:"Ginger-Garlic Beef &amp; Rice Skillet with Peppers", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"beefDinner",
+      ing:["Beef &amp; rice skillet — 1.25 cups (her) / 2 cups (him)"],
+      method:"Batch: brown 2 lbs grass-fed ground beef with peppers/onion, fresh ginger, garlic &amp; tamari, stir in diced tomatoes, fold in cooked rice. Covers Mon–Wed dinners."},
+    lb:{name:"Ginger Turkey &amp; Sweet Potato Skillet with Peppers", tag:"batch", cooked:"Batch-cooked Wednesday", macroKey:"turkeyLunch",
+      ing:["Ginger turkey skillet — 1 bowl (her) / 1.5 bowls (him)","Brown rice — ½ cup (her) / 1 cup (him)","Avocado — ¼ (her) / ½ (him)"],
+      method:"Batch: brown 3 lbs turkey with onion &amp; peppers, fresh ginger, garlic &amp; tamari, diced tomatoes, sweet potato + broth, simmer 25 min. Covers Thu–Sun lunches."},
+    de:{name:"Sesame-Ginger Turkey Skillet with Rice &amp; Broccoli", tag:"fresh", macroKey:"turkeyFreshDinner",
+      ing:["Ground turkey — 4 oz (her) / 7 oz (him)","Cooked rice — ¾ cup (her) / 1.25 cups (him)","Broccoli, chopped — ½ cup (her) / 1 cup (him)","Shredded cheese or sesame seeds — 1 oz (her) / 1.5 oz (him)","Sesame oil, ginger, garlic, tamari"],
+      method:"Quick weeknight skillet (~20 min): brown turkey with broccoli, ginger, garlic &amp; tamari, stir through rice, finish with sesame oil. Cooked fresh Thursday."},
+    db:{name:"Foil-Packet Ginger-Garlic Salmon with Broccoli &amp; Sweet Potato", tag:"fresh", macroKey:"salmonDinner",
+      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Sweet potato, diced — ¾ cup (her) / 1.5 cups (him)","Broccoli — 1 cup (her) / 1.5 cups (him)","Sesame oil, ginger, garlic, tamari"],
+      method:"Build foil packets: veg + salmon + ginger-garlic-tamari glaze, seal, bake 425°F 18–20 min until salmon flakes."},
+    dc:{name:"Sesame-Ginger Chicken &amp; Brami Noodle Salad", tag:"fresh", macroKey:"capreseDinner",
+      ing:["Brami protein pasta — 1.5 oz dry (her) / 3 oz (him)","Cooked chicken, sliced — 3 oz (her) / 6 oz (him)","Shredded broccoli slaw — 1 cup (her) / 1.5 cups (him)","Scallion &amp; sesame seeds — 1 tbsp (her) / 1.5 tbsp (him)","Sesame oil, ginger, garlic, tamari, lime"],
+      method:"Cook pasta per package, cool. Toss with broccoli slaw, scallion, sesame-ginger-tamari dressing. Top with sliced chicken and sesame seeds."},
+    dd:{name:"Sesame-Ginger Tilapia with Green Beans &amp; Potato", tag:"fresh", macroKey:"tilapiaDinner",
+      ing:["Tilapia fillet — 5 oz (her) / 7 oz (him)","Diced potato — ¾ cup (her) / 1 cup (him)","Green beans — 1 cup (her) / 1.5 cups (him)","Sesame oil, ginger, garlic, tamari"],
+      method:"Roast potato &amp; green beans at 425°F 20 min. Pan-sear tilapia in sesame oil with ginger-garlic-tamari glaze, 3 min per side."},
+    s1:{name:"Greek Yogurt, Berries &amp; Chia", tag:"fresh", macroKey:"s1",
+      ing:["Plain fat-free Greek yogurt — 1 cup (her) / 1.5 cups (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"], method:"Stir together."},
+    s2:{name:"Apple + Almond Butter", tag:"fresh", macroKey:"s2",
+      ing:["Apple — 1","Almond butter — 1 tbsp (her) / 2 tbsp (him)"], method:"Slice and dip."},
+    s3:{name:"Protein Shake", tag:"fresh", macroKey:"s3",
+      ing:["Protein powder — 1 scoop","A2 milk — 1 cup","Banana — ½ (her) / 1 (him)"], method:"Blend or shake."},
+    s4:{name:"Kefir + Almonds", tag:"fresh", macroKey:"s4",
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Raw almonds — 1 oz (her) / 1.5 oz (him)"], method:"Pour and portion."},
+    s5:{name:"Orange + Hard-Boiled Eggs", tag:"fresh", macroKey:"s5",
+      ing:["Orange — 1","Pasture eggs, hard-boiled — 2 (her) / 3 (him)"], method:"Peel and go."},
+  },
+  trip1:{
+    "Proteins &amp; Dairy":[["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef","2 lbs"],["Pasture-raised eggs","1 dozen"],["Plain fat-free Greek yogurt","1 (32oz) tub"],["Kefir, plain","2 (32oz) bottles"],["A2 grass-fed milk","1 quart"]],
+    "Produce":[["Sweet potatoes","2.5 lbs"],["Broccoli","1.75 lbs"],["Bell peppers","2"],["Onion","1"],["Diced tomatoes, no added sugar","1 can"],["Avocado","1"],["Mixed berries","3 lbs"],["Apple","2"],["Orange","2"],["Banana","2"],["Fresh ginger root","1 knob"],["Scallions","1 bunch"],["Garlic","as needed"]],
+  },
+  trip2:{
+    "Proteins &amp; Dairy":[["Ground turkey, 93% lean","3.5 lbs"],["Chicken breast/thigh (for noodle salad)","¾ lb"],["Salmon fillets","1 lb"],["Tilapia fillets","1 lb"],["Pasture-raised eggs","1.5 dozen"],["Plain fat-free Greek yogurt","1 (32oz) tub"],["Kefir, plain","2 (32oz) bottles"],["A2 grass-fed milk","1 quart"],["Shredded cheese","2.5 oz"]],
+    "Produce":[["Sweet potatoes","3.5 lbs"],["Broccoli","1.75 lbs"],["Broccoli slaw mix","1 bag"],["Onion","1"],["Diced tomatoes, no added sugar","1 can"],["Potatoes, regular","1 lb"],["Green beans","¾ lb"],["Avocados","4"],["Mixed berries","3 lbs"],["Apple","2"],["Orange","2"],["Banana","3"],["Scallions","2 bunches"],["Fresh ginger root","2 knobs"],["Garlic","as needed"]],
+  },
+};
+
+const WEEKS = [week1, week2, week3, week4];
+let currentWeek = 0;
+let currentDay = 0;
+
+function macroGrid(m){
+  return `<div class="macro-grid">
+    <div><div class="v">${m.cal}</div><div class="l">Cal</div></div>
+    <div><div class="v">${m.p}g</div><div class="l">Protein</div></div>
+    <div><div class="v">${m.c}g</div><div class="l">Carb</div></div>
+    <div><div class="v">${m.f}g</div><div class="l">Fat</div></div>
+    <div><div class="v">${m.fb}g</div><div class="l">Fiber</div></div>
+  </div>`;
+}
+
+function renderWeekNav(){
+  const el = document.getElementById('weekNav');
+  el.innerHTML = WEEKS.map((w,i)=>`<button class="${i===currentWeek?'active':''}" data-i="${i}"><span class="n">${w.name}</span>${w.theme}</button>`).join('');
+  el.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      currentWeek = +btn.dataset.i;
+      currentDay = 0;
+      renderAll();
+    });
+  });
+  document.getElementById('weekBlurb').innerHTML = WEEKS[currentWeek].blurb;
+}
+
+function renderDayTabs(){
+  const el = document.getElementById('dayTabs');
+  el.innerHTML = DAYS.map((d,i)=>`<button class="day-tab${i===currentDay?' active':''}" data-i="${i}">${d.label}<span class="d">${d.note ? d.note : d.date}</span></button>`).join('');
+  el.querySelectorAll('.day-tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      currentDay = +btn.dataset.i;
+      el.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      renderDay();
+    });
+  });
+}
+
+function renderDay(){
+  const day = DAYS[currentDay];
+  const recipes = WEEKS[currentWeek].recipes;
+
+  const tot = {him:{cal:0,p:0,c:0,f:0,fb:0}, her:{cal:0,p:0,c:0,f:0,fb:0}};
+  Object.values(day.slots).forEach(id=>{
+    const m = MACROS[recipes[id].macroKey];
+    ['him','her'].forEach(who=>{
+      ['cal','p','c','f','fb'].forEach(k=>{ tot[who][k] = Math.round((tot[who][k] + m[who][k]) * 10) / 10; });
+    });
+  });
+
+  document.getElementById('totals').innerHTML = `
+    <div class="card him">
+      <div class="who">Him — Today's Total</div>
+      <div class="stat-row"><span>Calories</span><b>${tot.him.cal}</b></div>
+      <div class="stat-row"><span>Protein</span><b>${tot.him.p}g</b></div>
+      <div class="stat-row"><span>Carbs</span><b>${tot.him.c}g</b></div>
+      <div class="stat-row"><span>Fat</span><b>${tot.him.f}g</b></div>
+      <div class="stat-row"><span>Fiber</span><b>${tot.him.fb}g</b></div>
+    </div>
+    <div class="card her">
+      <div class="who">Her — Today's Total</div>
+      <div class="stat-row"><span>Calories</span><b>${tot.her.cal}</b></div>
+      <div class="stat-row"><span>Protein</span><b>${tot.her.p}g</b></div>
+      <div class="stat-row"><span>Carbs</span><b>${tot.her.c}g</b></div>
+      <div class="stat-row"><span>Fat</span><b>${tot.her.f}g</b></div>
+      <div class="stat-row"><span>Fiber</span><b>${tot.her.fb}g</b></div>
+    </div>`;
+
+  document.getElementById('meals').innerHTML = Object.entries(day.slots).map(([slot,id])=>{
+    const r = recipes[id];
+    const m = MACROS[r.macroKey];
+    return `<div class="meal">
+      <div class="meal-head">
+        <div>
+          <div class="meal-slot">${slot}</div>
+          <div class="meal-title">${r.name}</div>
+          ${r.cooked ? `<div class="meal-cooked">${r.cooked}</div>` : ''}
+        </div>
+        <span class="tag ${r.tag}">${r.tag==='batch'?'🔁 batch-cooked':'🍳 cooked fresh'}</span>
+      </div>
+      <div class="meal-macros">
+        <div class="macro-block her"><div class="who">Her</div>${macroGrid(m.her)}</div>
+        <div class="macro-block him"><div class="who">Him</div>${macroGrid(m.him)}</div>
+      </div>
+      <details>
+        <summary>Recipe</summary>
+        <div class="recipe-body">
+          <h4>Ingredients</h4>
+          <ul>${r.ing.map(x=>`<li>${x}</li>`).join('')}</ul>
+          <h4>Method</h4>
+          <p>${r.method}</p>
+        </div>
+      </details>
+    </div>`;
+  }).join('');
+}
+
+function renderPrep(){
+  const r = WEEKS[currentWeek].recipes;
+  document.getElementById('prepContent').innerHTML = `
+    <div class="prep-day">
+      <div class="when">Sunday · Batch #1 · ~1.5 hours</div>
+      <h3>Main Prep Session</h3>
+      <ol>
+        <li><b>${r.la.name}</b> — ${r.la.method} → <b>lunches Mon–Wed only</b>.</li>
+        <li><b>${r.da.name}</b> — ${r.da.method} → <b>dinners Mon–Wed only</b>.</li>
+        <li>Hard-boil eggs and portion berries into daily bags for the first half of the week.</li>
+      </ol>
+    </div>
+    <div class="prep-day">
+      <div class="when">Wednesday · Batch #2 · ~45 min</div>
+      <h3>Mid-Week Prep Session</h3>
+      <ol>
+        <li><b>${r.lb.name}</b> — ${r.lb.method} → <b>lunches Thu–Sun</b>.</li>
+        <li>Hard-boil a fresh batch of eggs and portion berries for the back half of the week.</li>
+      </ol>
+    </div>
+    <div class="fresh-note">
+      <b style="color:#D9A441;">Cooked fresh, same-day, every time:</b> all three breakfasts, ${r.de.name} (Thu), ${r.db.name} (Fri), ${r.dc.name} (Sat), and ${r.dd.name} (Sun). Longest fridge time is 3 days (chicken/beef, Sun→Wed) or 4 days (turkey lunch batch, Wed→Sun).
+    </div>`;
+}
+
+/* ============================================================
+   FIREBASE SYNC SETUP (so you and your wife see the same checklist)
+
+   1. Go to https://console.firebase.google.com -> "Add project" (free, no card needed).
+   2. In the project: Build > Realtime Database > Create Database > start in TEST MODE.
+   3. Project settings (gear icon, top left) > General tab > "Your apps" > click the
+      </> (web) icon > register an app (nickname doesn't matter, skip hosting).
+   4. It will show you a firebaseConfig object — copy it and paste it in below,
+      replacing the placeholder object.
+   5. Change HOUSEHOLD_ID below to any private string only the two of you know.
+      Test-mode rules are open to anyone with your database URL, so this string
+      is what keeps your data separate from a random stranger poking the same URL.
+   6. IMPORTANT: test-mode rules auto-expire after 30 days. Before that, go to
+      Realtime Database > Rules and set:
+        { "rules": { ".read": true, ".write": true } }
+      (fine for a private two-person tool — don't share the config publicly).
+
+   Until you do this, the app runs fine using localStorage only (no cross-device sync).
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+const HOUSEHOLD_ID = "change-me-to-something-private-123";
+
+let dbRoot = null;
+let syncEnabled = false;
+try{
+  if(firebaseConfig.apiKey !== "YOUR_API_KEY" && typeof firebase !== 'undefined'){
+    firebase.initializeApp(firebaseConfig);
+    dbRoot = firebase.database().ref('weeklyBoard/' + HOUSEHOLD_ID);
+    syncEnabled = true;
+  }
+} catch(e){ console.warn('Firebase sync not configured — using localStorage only.', e); }
+
+const LS_PREFIX = 'weeklyBoard:';
+const activeListeners = {}; // slot name -> { key, callback }
+
+function keyToPath(key){ return key.replace(/:/g, '/'); }
+
+async function loadChecklist(key){
+  try{
+    if(syncEnabled){
+      const snap = await dbRoot.child(keyToPath(key)).once('value');
+      const val = snap.val();
+      if(val){
+        localStorage.setItem(LS_PREFIX + key, JSON.stringify(val));
+        return val;
+      }
+    }
+    const raw = localStorage.getItem(LS_PREFIX + key);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e){ return {}; }
+}
+
+async function saveChecklist(key, state){
+  try{ localStorage.setItem(LS_PREFIX + key, JSON.stringify(state)); } catch(e){ /* ignore */ }
+  if(syncEnabled){
+    try{ await dbRoot.child(keyToPath(key)).set(state); } catch(e){ /* ignore, local copy still saved */ }
+  }
+}
+
+// Keeps a device's screen live-updated when the *other* device checks something off.
+function attachLiveSync(slot, key, containerId, countElId, data){
+  if(!syncEnabled) return;
+  const prev = activeListeners[slot];
+  if(prev){
+    if(prev.key === key) return; // already listening to the right key
+    dbRoot.child(keyToPath(prev.key)).off('value', prev.callback);
+  }
+  const callback = (snap)=>{
+    const state = snap.val() || {};
+    localStorage.setItem(LS_PREFIX + key, JSON.stringify(state));
+    document.getElementById(containerId).innerHTML = groceryGrid(data, state);
+    wireChecklist(containerId, countElId, key, state, countItems(data));
+  };
+  dbRoot.child(keyToPath(key)).on('value', callback);
+  activeListeners[slot] = {key, callback};
+}
+function itemKey(cat, name){ return cat + '::' + name; }
+
+function groceryGrid(data, state){
+  return Object.entries(data).map(([cat,items])=>`
+    <div class="g-cat">
+      <h3>${cat}</h3>
+      <ul>${items.map(([n,q])=>{
+        const k = itemKey(cat,n);
+        const checked = !!state[k];
+        return `<li class="${checked?'checked':''}">
+          <label>
+            <span class="item-left">
+              <input type="checkbox" data-key="${k.replace(/"/g,'&quot;')}" ${checked?'checked':''}>
+              <span class="item-name">${n}</span>
+            </span>
+            <span class="qty">${q}</span>
+          </label>
+        </li>`;
+      }).join('')}</ul>
+    </div>
+  `).join('');
+}
+
+function updateCount(elId, state, total){
+  const checkedCount = Object.values(state).filter(Boolean).length;
+  document.getElementById(elId).textContent = `${checkedCount} / ${total} checked`;
+}
+
+function countItems(data){
+  return Object.values(data).reduce((sum, items)=> sum + items.length, 0);
+}
+
+function wireChecklist(containerId, countElId, storageKey, state, total){
+  const container = document.getElementById(containerId);
+  updateCount(countElId, state, total);
+  container.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      const k = cb.dataset.key;
+      state[k] = cb.checked;
+      const li = cb.closest('li');
+      if(li) li.classList.toggle('checked', cb.checked);
+      updateCount(countElId, state, total);
+      saveChecklist(storageKey, state);
+    });
+  });
+}
+
+async function renderGroceryList(containerId, countElId, storageKey, data, slot){
+  const state = await loadChecklist(storageKey);
+  document.getElementById(containerId).innerHTML = groceryGrid(data, state);
+  wireChecklist(containerId, countElId, storageKey, state, countItems(data));
+  attachLiveSync(slot, storageKey, containerId, countElId, data);
+}
+
+async function renderGrocery(){
+  const wkey = 'week' + (currentWeek + 1);
+  renderGroceryList('groceryPantry', 'countPantry', 'grocery:pantry', PANTRY, 'pantry');
+  renderGroceryList('groceryTrip1', 'countTrip1', 'grocery:' + wkey + ':trip1', WEEKS[currentWeek].trip1, 'trip1');
+  renderGroceryList('groceryTrip2', 'countTrip2', 'grocery:' + wkey + ':trip2', WEEKS[currentWeek].trip2, 'trip2');
+}
+
+document.querySelectorAll('.reset-link').forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    const which = btn.dataset.reset;
+    const wkey = 'week' + (currentWeek + 1);
+    let storageKey, containerId, countElId, data;
+    if(which==='pantry'){ storageKey='grocery:pantry'; containerId='groceryPantry'; countElId='countPantry'; data=PANTRY; }
+    if(which==='trip1'){ storageKey='grocery:'+wkey+':trip1'; containerId='groceryTrip1'; countElId='countTrip1'; data=WEEKS[currentWeek].trip1; }
+    if(which==='trip2'){ storageKey='grocery:'+wkey+':trip2'; containerId='groceryTrip2'; countElId='countTrip2'; data=WEEKS[currentWeek].trip2; }
+    await saveChecklist(storageKey, {});
+    document.getElementById(containerId).innerHTML = groceryGrid(data, {});
+    wireChecklist(containerId, countElId, storageKey, {}, countItems(data));
+  });
+});
+
+function renderAll(){
+  renderWeekNav();
+  renderDayTabs();
+  renderDay();
+  renderPrep();
+  renderGrocery();
+}
+
+document.querySelectorAll('nav.sections button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('nav.sections button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById(btn.dataset.view).classList.add('active');
+  });
+});
+
+renderAll();
+</script>
+</body>
+</html>
