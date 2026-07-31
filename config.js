@@ -30,13 +30,26 @@
    ⚠️ This repo should be PRIVATE on GitHub. HOUSEHOLD_ID below is effectively
    a shared secret gating who can read/write your grocery checklist.
    ============================================================ */
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+
+  apiKey: "AIzaSyCsadWL7Hk4TfEWRm5D1rcVT0yL_90ZwXM",
+
+  authDomain: "family-weekly-meal-plan.firebaseapp.com",
+
+  databaseURL: "https://family-weekly-meal-plan-default-rtdb.firebaseio.com",
+
+  projectId: "family-weekly-meal-plan",
+
+  storageBucket: "family-weekly-meal-plan.firebasestorage.app",
+
+  messagingSenderId: "416643598511",
+
+  appId: "1:416643598511:web:7016bcf32215d35312ac5a",
+
+  measurementId: "G-SETRSWBVW8"
+
 };
-const HOUSEHOLD_ID = "change-me-to-something-private-123";
+
+const HOUSEHOLD_ID = "123";
