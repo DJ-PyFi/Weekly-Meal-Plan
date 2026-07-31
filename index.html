@@ -172,14 +172,15 @@
   .g-cat h3{font-family:'Bebas Neue',sans-serif;font-size:19px;margin:0 0 8px;letter-spacing:.03em;color:var(--him);}
   .g-cat ul{margin:0;padding-left:0;list-style:none;font-size:13px;line-height:1.7;}
   .g-cat li{border-bottom:1px solid rgba(34,40,30,.08);padding:2px 0;}
-  .g-cat label{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;padding:5px 2px;border-radius:5px;transition:.15s;}
+  .g-cat label{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;cursor:pointer;padding:5px 2px;border-radius:5px;transition:.15s;}
   .g-cat label:hover{background:rgba(34,40,30,.05);}
-  .g-cat .item-left{display:flex;align-items:center;gap:9px;min-width:0;}
-  .g-cat .item-name{overflow-wrap:anywhere;}
+  .g-cat .item-left{display:flex;align-items:flex-start;gap:9px;min-width:0;flex:1 1 auto;}
+  .g-cat .item-name{overflow-wrap:break-word;word-break:break-word;flex:1 1 auto;}
   .g-cat input[type=checkbox]{
     appearance:none;-webkit-appearance:none;flex:0 0 auto;
     width:17px;height:17px;border-radius:5px;border:1.5px solid var(--ink-soft);
     cursor:pointer;position:relative;background:transparent;transition:.15s;
+    margin-top:1px;
   }
   .g-cat input[type=checkbox]:checked{background:var(--batch);border-color:var(--batch);}
   .g-cat input[type=checkbox]:checked::after{
@@ -187,7 +188,7 @@
     border:solid white;border-width:0 2px 2px 0;transform:rotate(40deg);
   }
   .g-cat li.checked .item-name, .g-cat li.checked .qty{opacity:.4;text-decoration:line-through;}
-  .g-cat .qty{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);white-space:nowrap;}
+  .g-cat .qty{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);white-space:normal;text-align:right;flex:0 0 auto;max-width:42%;}
   .g-note{margin-top:22px;font-size:13px;color:#9AA491;line-height:1.6;max-width:640px;}
   .reset-link{background:none;border:none;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#6E7864;cursor:pointer;text-decoration:underline;padding:0;}
   .reset-link:hover{color:var(--her);}
@@ -262,7 +263,7 @@
     </div>
     <div class="grocery-grid" id="groceryTrip2"></div>
 
-    <p class="g-note">Fresh proteins, dairy, and produce are split across the two trips above so everything stays close to its purchase date. The pantry list (rice, oats, pasta, nuts, spices, protein powder) is shelf-stable — grab it whenever's convenient. A few items — fresh mozzarella, basil, asparagus/green beans, cherry tomatoes — are easy Whole Foods or Target add-ons if Aldi doesn't have them that week. Checked-off items are saved automatically.</p>
+    <p class="g-note">Fresh proteins, dairy, and produce are split across the two trips above so everything stays close to its purchase date. The pantry list (rice, oats, pasta, nuts, spices, protein powder) is shelf-stable — grab it whenever's convenient. Rice shows up in 3 recipes a week, so the 7–8 lb total is for the whole 4-week rotation, not one trip. A few items — fresh mozzarella, basil, asparagus/green beans, cherry tomatoes — are easy Whole Foods or Target add-ons if Aldi doesn't have them that week. Checked-off items are saved automatically.</p>
   </section>
 
   <footer>MACROS ARE ESTIMATES · EXPECT ±10% REAL-WORLD VARIANCE</footer>
@@ -299,9 +300,9 @@ const DAYS = [
 ];
 
 const PANTRY = {
-  "Grains, Pasta & Baking":[["Brown rice","7–8 lb (used in 3 recipes/week — buy a large bag or two)"],["Rolled oats","1 container"],["Brami protein pasta","1 box"],["Stone-mill wheat bread","1 loaf"]],
+  "Grains, Pasta & Baking":[["Brown rice","7–8 lb (2–3 bags)"],["Rolled oats","1 container"],["Brami protein pasta","1 box"],["Stone-mill wheat bread","1 loaf"]],
   "Nuts, Seeds & Fats":[["Chia seeds","1 bag"],["Raw almonds","12 oz"],["Almond butter","1 jar"],["Olive oil","—"],["Toasted sesame oil","1 small bottle (Week 4)"],["Sesame seeds","1 small bag (Week 4)"],["Grass-fed butter","1 stick"]],
-  "Other":[["Protein powder","1 tub"],["Monk fruit sweetener","—"],["Dried spices","garlic powder, paprika, smoked paprika, thyme, oregano, cumin, chili powder, ground ginger"],["Balsamic vinegar","—"],["Low-sodium tamari or coconut aminos","1 bottle (Week 4)"]],
+  "Other":[["Protein powder","1 tub"],["Monk fruit sweetener","—"],["Garlic powder","1 jar"],["Paprika","1 jar"],["Smoked paprika","1 jar"],["Dried thyme","1 jar"],["Dried oregano","1 jar"],["Ground cumin","1 jar"],["Chili powder","1 jar"],["Ground ginger","1 jar"],["Balsamic vinegar","—"],["Low-sodium tamari or coconut aminos","1 bottle (Week 4)"]],
 };
 
 const week1 = {
