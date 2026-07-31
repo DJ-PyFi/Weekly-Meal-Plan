@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Franklin:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="config.js"></script>
 <style>
   :root{
     --bg:#1E2A1F;
@@ -663,50 +664,22 @@ function renderPrep(){
 /* ============================================================
    FIREBASE SYNC SETUP (so you and your wife see the same checklist)
 
-   1. Go to https://console.firebase.google.com -> "Add project" (free, no card needed).
-   2. In the project: Build > Realtime Database > Create Database > start in TEST MODE.
-   3. Project settings (gear icon, top left) > General tab > "Your apps" > click the
-      </> (web) icon > register an app (nickname doesn't matter, skip hosting).
-   4. It will show you a firebaseConfig object — copy it and paste it in below,
-      replacing the placeholder object.
-   5. Change HOUSEHOLD_ID below to any private string only the two of you know.
-      Test-mode rules are open to anyone with your database URL, so this string
-      is what keeps your data separate from a random stranger poking the same URL.
-   6. IMPORTANT: test-mode rules auto-expire after 30 days. Before that, go to
-      Realtime Database > Rules and set:
-        { "rules": { ".read": true, ".write": true } }
-      (fine for a private two-person tool — don't share the config publicly).
+   firebaseConfig and HOUSEHOLD_ID now live in config.js, loaded via
+   <script src="config.js"></script> in the <head> above. See README.md
+   in the repo for full setup steps. Keeping them in a separate file means
+   future app updates (this file) never overwrite your real credentials.
 
-   Until you do this, the app runs fine using localStorage only (no cross-device sync).
+   Until config.js has real values, the app runs fine using localStorage
+   only (no cross-device sync) — see the fallback check below.
    ============================================================ */
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-
-const firebaseConfig = {
-
-  apiKey: "AIzaSyCsadWL7Hk4TfEWRm5D1rcVT0yL_90ZwXM",
-
-  authDomain: "family-weekly-meal-plan.firebaseapp.com",
-
-  databaseURL: "https://family-weekly-meal-plan-default-rtdb.firebaseio.com",
-
-  projectId: "family-weekly-meal-plan",
-
-  storageBucket: "family-weekly-meal-plan.firebasestorage.app",
-
-  messagingSenderId: "416643598511",
-
-  appId: "1:416643598511:web:7016bcf32215d35312ac5a",
-
-  measurementId: "G-SETRSWBVW8"
-
-};
-
-const HOUSEHOLD_ID = "123";
 
 let dbRoot = null;
 let syncEnabled = false;
 try{
-  if(firebaseConfig.apiKey !== "YOUR_API_KEY" && typeof firebase !== 'undefined'){
+  const hasConfig = typeof firebaseConfig !== 'undefined'
+    && typeof HOUSEHOLD_ID !== 'undefined'
+    && firebaseConfig.apiKey !== "YOUR_API_KEY";
+  if(hasConfig && typeof firebase !== 'undefined'){
     firebase.initializeApp(firebaseConfig);
     dbRoot = firebase.database().ref('weeklyBoard/' + HOUSEHOLD_ID);
     syncEnabled = true;
