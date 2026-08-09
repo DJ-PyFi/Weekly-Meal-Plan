@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Weekly Board — Recipe Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Franklin:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1E2A1F;
+    --bg-panel:#26342A;
+    --paper:#F5F0E3;
+    --paper-dim:#EAE3D1;
+    --ink:#22281E;
+    --ink-soft:#5C6355;
+    --him:#C97A3D;
+    --her:#B5566B;
+    --batch:#7C9A6E;
+    --fresh:#D9A441;
+    --line:#3C4A3B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    background-image:
+      radial-gradient(ellipse at top left, rgba(124,154,110,0.08), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(201,122,61,0.06), transparent 50%);
+    color:var(--paper);
+    font-family:'Libre Franklin', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:36px 20px 80px;}
+
+  header{text-align:center;padding-bottom:18px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--batch);margin-bottom:10px;
+  }
+  h1{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(40px,8vw,64px);
+    letter-spacing:.04em;margin:0;line-height:.95;color:var(--paper);
+  }
+  h1 span{color:var(--fresh);}
+  .subhead{color:#B9C0AE;font-size:14.5px;margin:10px auto 0;max-width:560px;line-height:1.55;}
+  .squiggle{width:140px;height:14px;margin:18px auto 0;opacity:.65;display:block;}
+
+  .tally{
+    display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:22px 0 6px;
+  }
+  .tally .pill{
+    background:var(--bg-panel);border:1px solid var(--line);border-radius:999px;
+    padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;
+    letter-spacing:.06em;color:#B9C0AE;cursor:pointer;transition:.15s;
+  }
+  .tally .pill:hover{border-color:var(--fresh);color:var(--paper);}
+  .tally .pill b{color:var(--fresh);}
+
+  .toolbar{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:16px 0 30px;}
+  .btn{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;
+    background:transparent;color:#9AA491;border:1px solid var(--line);padding:9px 16px;border-radius:999px;
+    cursor:pointer;transition:.15s;
+  }
+  .btn:hover{border-color:var(--fresh);color:var(--paper);}
+  .btn.primary{background:var(--paper);color:var(--ink);border-color:var(--paper);font-weight:600;}
+  .btn.primary:hover{background:var(--fresh);border-color:var(--fresh);}
+  .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{outline:2px solid var(--fresh);outline-offset:2px;}
+
+  .sec-head{
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);padding-bottom:8px;margin:34px 0 6px;
+  }
+  .sec-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.02em;color:var(--fresh);}
+  .sec-count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA491;letter-spacing:.03em;white-space:nowrap;}
+  .sec-actions{display:flex;gap:12px;}
+  .link{
+    background:none;border:none;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;
+    text-transform:uppercase;color:#6E7864;cursor:pointer;text-decoration:underline;padding:0;
+  }
+  .link:hover{color:var(--her);}
+  .sec-env{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7E886F;margin:0 0 16px;line-height:1.5;}
+
+  .card{
+    background:var(--paper);color:var(--ink);border-radius:12px;margin-bottom:10px;overflow:hidden;
+    box-shadow:0 5px 14px rgba(0,0,0,.16);border-left:3px solid transparent;transition:.15s;
+  }
+  .card.on{border-left-color:var(--batch);}
+  .card-top{display:flex;align-items:flex-start;gap:11px;padding:14px 16px 10px;cursor:pointer;}
+  .card-top:hover{background:rgba(34,40,30,.04);}
+  input[type=checkbox]{
+    appearance:none;-webkit-appearance:none;flex:0 0 auto;
+    width:19px;height:19px;border-radius:5px;border:1.5px solid var(--ink-soft);
+    cursor:pointer;position:relative;background:transparent;transition:.15s;margin-top:2px;
+  }
+  input[type=checkbox]:checked{background:var(--batch);border-color:var(--batch);}
+  input[type=checkbox]:checked::after{
+    content:'';position:absolute;left:5px;top:1.5px;width:4.5px;height:10px;
+    border:solid white;border-width:0 2px 2px 0;transform:rotate(40deg);
+  }
+  .card-name{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:.02em;line-height:1.1;}
+  .card.off .card-name{opacity:.62;}
+  .badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+  .tag{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:4px;letter-spacing:.03em;}
+  .tag.batch{background:rgba(124,154,110,.2);color:#4C6B41;border:1px solid rgba(124,154,110,.5);}
+  .tag.fresh{background:rgba(217,164,65,.22);color:#8A6410;border:1px solid rgba(217,164,65,.55);}
+  .tag.rot{background:rgba(34,40,30,.07);color:var(--ink-soft);border:1px solid rgba(34,40,30,.18);}
+  .tag.mine{background:rgba(181,86,107,.16);color:#8C3A4C;border:1px solid rgba(181,86,107,.45);}
+  .macros{display:flex;gap:14px;flex-wrap:wrap;padding:0 16px 12px 46px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;}
+  .macros .who{display:inline-block;min-width:34px;letter-spacing:.08em;text-transform:uppercase;font-size:10px;}
+  .macros .her .who{color:var(--her);} .macros .him .who{color:var(--him);}
+  .macros span.line{color:var(--ink-soft);}
+  details{border-top:1px solid rgba(34,40,30,.1);padding:0 16px;}
+  summary{
+    cursor:pointer;padding:10px 0;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);
+    list-style:none;display:flex;align-items:center;gap:6px;
+  }
+  summary::-webkit-details-marker{display:none;}
+  summary:before{content:'+';font-size:14px;color:var(--fresh);}
+  details[open] summary:before{content:'–';}
+  .build{padding:0 0 14px;font-size:13.5px;line-height:1.6;}
+  .build .del{margin-top:10px;}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:14px;}
+  .panel h3{font-family:'Bebas Neue',sans-serif;font-size:22px;margin:0 0 4px;letter-spacing:.02em;color:var(--paper);}
+  .panel p{color:#9AA491;font-size:13px;line-height:1.6;margin:0 0 14px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;color:#7E886F;margin-bottom:5px;}
+  .field input, .field select, textarea{
+    width:100%;background:#1B241C;border:1px solid var(--line);border-radius:7px;color:var(--paper);
+    font-family:'Libre Franklin',sans-serif;font-size:13.5px;padding:9px 11px;
+  }
+  textarea{font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.6;min-height:220px;resize:vertical;}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+  .hint{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#6E7864;margin-top:-6px;margin-bottom:12px;}
+  .hidden{display:none;}
+  .note{margin-top:26px;font-size:13px;color:#9AA491;line-height:1.65;}
+  .note b{color:#B9C0AE;}
+  footer{text-align:center;margin-top:44px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E7864;letter-spacing:.08em;}
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Two Plates · One Kitchen</div>
+    <h1>THE RECIPE <span>LIBRARY</span></h1>
+    <p class="subhead">Every meal that fits the household targets, in one place. Check the ones you want pulled into an upcoming week, add new ones as you find them, then send the selection over when it's time to build the next rotation.</p>
+    <svg class="squiggle" viewBox="0 0 140 14"><path d="M0 7 Q 10 0, 20 7 T 40 7 T 60 7 T 80 7 T 100 7 T 120 7 T 140 7" fill="none" stroke="#D9A441" stroke-width="2" stroke-linecap="round"/></svg>
+  </header>
+
+  <div class="tally" id="tally"></div>
+  <div class="toolbar">
+    <button class="btn primary" id="btnExport">Show my selection</button>
+    <button class="btn" id="btnAdd">Add a recipe</button>
+    <button class="btn" id="btnClearAll">Clear all checks</button>
+  </div>
+
+  <div class="panel hidden" id="addPanel">
+    <h3>Add a recipe</h3>
+    <p>For anything you bring in from outside — a recipe you found, tore out, or want to try. It saves to this device and shows up in its section with a "yours" tag.</p>
+    <div class="field">
+      <label for="fName">Recipe name</label>
+      <input id="fName" type="text" placeholder="Harissa chicken with chickpeas">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="fCat">Meal</label>
+        <select id="fCat">
+          <option value="breakfast">Breakfast</option>
+          <option value="lunch">Lunch</option>
+          <option value="dinner" selected>Dinner</option>
+          <option value="snack">Snack</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fTag">How it's cooked</label>
+        <select id="fTag">
+          <option value="fresh">Cooked fresh</option>
+          <option value="batch">Batch-cooked</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="fHerCal">Her — calories</label><input id="fHerCal" type="number" inputmode="numeric" placeholder="510"></div>
+      <div class="field"><label for="fHerP">Her — protein (g)</label><input id="fHerP" type="number" inputmode="numeric" placeholder="40"></div>
+      <div class="field"><label for="fHimCal">Him — calories</label><input id="fHimCal" type="number" inputmode="numeric" placeholder="810"></div>
+      <div class="field"><label for="fHimP">Him — protein (g)</label><input id="fHimP" type="number" inputmode="numeric" placeholder="60"></div>
+    </div>
+    <div class="field">
+      <label for="fBuild">Ingredients and quantities</label>
+      <input id="fBuild" type="text" placeholder="Chicken thigh 5 oz (her) / 8 oz (him), chickpeas 1 cup, squash 1.5 cups, harissa 1 tbsp">
+    </div>
+    <p class="hint">Write real quantities with the her/him split — that's what the Weekly Board needs to shop and cook from it.</p>
+    <button class="btn primary" id="btnSaveRecipe">Save recipe</button>
+    <button class="btn" id="btnCancelAdd">Cancel</button>
+  </div>
+
+  <div class="panel hidden" id="exportPanel">
+    <h3>My selection</h3>
+    <p>Copy this and send it over when you want these worked into a week.</p>
+    <textarea id="exportText" readonly></textarea>
+    <div style="margin-top:12px;">
+      <button class="btn primary" id="btnCopy">Copy to clipboard</button>
+      <button class="btn" id="btnCloseExport">Close</button>
+    </div>
+  </div>
+
+  <div id="sections"></div>
+
+  <p class="note">
+    <b>Two ways a new recipe gets in here.</b> Add it yourself with the button above — that saves on this device only. Or send it to me in the project and I'll rebuild this file with it written in properly (real quantities, macros, shopping-list sizes), so it travels with the file to every device and can drop straight into a week.
+    <br><br>
+    <b>Reading the macros.</b> Each line is one meal for one person — the calorie and protein numbers a single serving contributes to that day. Meals within a section are built to roughly the same envelope, so swapping one for another keeps the daily totals on target.
+  </p>
+
+  <footer>MACROS ARE ESTIMATES · EXPECT ±10% REAL-WORLD VARIANCE</footer>
+</div>
+
+<script>
+/* ============================================================
+   Storage: works as a downloaded file (localStorage) and inside
+   a hosted artifact frame (window.storage). Falls back to memory.
+   ============================================================ */
+const KEY_SEL = 'weeklyBoard:library:selected';
+const KEY_CUSTOM = 'weeklyBoard:library:custom';
+const mem = {};
+
+const store = {
+  async get(key){
+    if(window.storage){
+      try{ const r = await window.storage.get(key); return r && r.value ? JSON.parse(r.value) : null; }
+      catch(e){ /* key missing or unavailable */ }
+    }
+    try{ const raw = localStorage.getItem(key); if(raw) return JSON.parse(raw); }
+    catch(e){ /* ignore */ }
+    return (key in mem) ? mem[key] : null;
+  },
+  async set(key, val){
+    mem[key] = val;
+    const s = JSON.stringify(val);
+    if(window.storage){
+      try{ await window.storage.set(key, s); } catch(e){ /* ignore */ }
+    }
+    try{ localStorage.setItem(key, s); } catch(e){ /* ignore */ }
+  }
+};
+
+const SECTIONS = [
+  {key:'breakfast', label:'Breakfast', env:'Slot envelope — her ~290–360 cal / 19–24g protein · him ~520–610 cal / 32–52g protein. Cooked fresh, same morning.'},
+  {key:'lunch', label:'Lunch', env:'Slot envelope — her ~450–550 cal / 33–42g protein · him ~700–850 cal / 42–62g protein. Batch-cooked Sunday (3 servings each) or Wednesday (4 servings each).'},
+  {key:'dinner', label:'Dinner', env:'Slot envelope — her ~445–570 cal / 35–48g protein · him ~760–885 cal / 56–78g protein. One batch skillet Sunday, four cooked fresh Thu–Sun.'},
+  {key:'snack', label:'Snacks', env:'Slot envelope — her ~190–320 cal / 14–33g protein · him ~275–390 cal / 20–40g protein. Two a day, assembled in a minute.'},
+];
+
+/* rot = which weeks it currently appears in. null = not in the rotation yet. */
+const ITEMS = [
+  /* ---------- BREAKFAST ---------- */
+  {id:'bf-egg-veggie', cat:'breakfast', name:'Egg & Veggie Scramble + Avocado Toast', tag:'fresh', rot:'Week 1',
+   her:{cal:354,p:19,c:22,f:25,fb:8}, him:{cal:600,p:32,c:43,f:34,fb:16},
+   build:'Eggs 2 (her) / 3 (him) · bell pepper + spinach ½ cup (her) / 1 cup (him) · butter 1 tsp · wheat toast 1 slice (her) / 2 (him) · avocado ¼ (her) / ½ (him).'},
+  {id:'bf-tomato-spinach', cat:'breakfast', name:'Tomato & Spinach Egg Scramble + Avocado Toast', tag:'fresh', rot:'Week 2',
+   her:{cal:354,p:19,c:22,f:25,fb:8}, him:{cal:600,p:32,c:43,f:34,fb:16},
+   build:'Eggs 2 (her) / 3 (him) · diced tomato + spinach ½ cup (her) / 1 cup (him) · butter 1 tsp · wheat toast 1 slice (her) / 2 (him) · avocado ¼ (her) / ½ (him).'},
+  {id:'bf-southwest-egg', cat:'breakfast', name:'Southwest Egg Scramble + Avocado Toast', tag:'fresh', rot:'Week 3',
+   her:{cal:354,p:19,c:22,f:25,fb:8}, him:{cal:600,p:32,c:43,f:34,fb:16},
+   build:'Eggs 2 (her) / 3 (him) · bell pepper + onion ½ cup (her) / 1 cup (him) · chili powder ¼ tsp · butter 1 tsp · wheat toast 1 slice (her) / 2 (him) · avocado ¼ (her) / ½ (him).'},
+  {id:'bf-scallion-egg', cat:'breakfast', name:'Scallion Veggie Egg Scramble + Avocado Toast', tag:'fresh', rot:'Week 4',
+   her:{cal:354,p:19,c:22,f:25,fb:8}, him:{cal:600,p:32,c:43,f:34,fb:16},
+   build:'Eggs 2 (her) / 3 (him) · bell pepper + scallion ½ cup (her) / 1 cup (him) · butter 1 tsp · wheat toast 1 slice (her) / 2 (him) · avocado ¼ (her) / ½ (him).'},
+  {id:'bf-protein-oats', cat:'breakfast', name:'Protein Oatmeal with Berries & Chia', tag:'fresh', rot:'Weeks 1, 2, 4',
+   her:{cal:349,p:24,c:44,f:6,fb:10.5}, him:{cal:588,p:44,c:72,f:9,fb:17},
+   build:'Dry oats ½ cup (her) / ¾ cup (him) · A2 milk ¼ cup (her) / ½ cup (him) · protein powder ½ scoop (her) / 1 scoop (him) · berries ½ cup (her) / 1 cup (him) · chia 1 tbsp (her) / 1.5 tbsp (him).'},
+  {id:'bf-apple-oats', cat:'breakfast', name:'Cinnamon-Apple Protein Oatmeal', tag:'fresh', rot:'Week 3',
+   her:{cal:349,p:24,c:44,f:6,fb:10.5}, him:{cal:588,p:44,c:72,f:9,fb:17},
+   build:'Dry oats ½ cup (her) / ¾ cup (him) · A2 milk ¼ cup (her) / ½ cup (him) · protein powder ½ scoop (her) / 1 scoop (him) · diced apple ½ cup (her) / 1 cup (him) · chia 1 tbsp (her) / 1.5 tbsp (him) · cinnamon ½ tsp.'},
+  {id:'bf-kefir-smoothie', cat:'breakfast', name:'Kefir Berry Protein Smoothie', tag:'fresh', rot:'Weeks 1, 2, 4',
+   her:{cal:291,p:24,c:36,f:5,fb:8.5}, him:{cal:521,p:43,c:68,f:8,fb:14},
+   build:'Kefir 1 cup (her) / 1.5 cups (him) · protein powder ½ scoop (her) / 1 scoop (him) · berries 1 cup (her) / 1.5 cups (him) · chia 1 tbsp (her) / 1.5 tbsp (him) · banana ½ (him only) · ice.'},
+  {id:'bf-banana-smoothie', cat:'breakfast', name:'Banana-Cinnamon Kefir Protein Smoothie', tag:'fresh', rot:'Week 3',
+   her:{cal:291,p:24,c:36,f:5,fb:8.5}, him:{cal:521,p:43,c:68,f:8,fb:14},
+   build:'Kefir 1 cup (her) / 1.5 cups (him) · protein powder ½ scoop (her) / 1 scoop (him) · banana ½ (her) / 1 (him) · chia 1 tbsp (her) / 1.5 tbsp (him) · cinnamon ¼ tsp · ice 1 cup.'},
+  {id:'bf-cc-pancakes', cat:'breakfast', name:'Cottage Cheese Protein Pancakes with Berries', tag:'fresh', rot:null,
+   her:{cal:340,p:32,c:34,f:8,fb:6}, him:{cal:555,p:48,c:54,f:13,fb:9},
+   build:'Cottage cheese ½ cup (her) / ¾ cup (him) · rolled oats ⅓ cup (her) / ½ cup (him) · egg 1 (her) / 2 (him) · protein powder ½ scoop (her) / 1 scoop (him) · baking powder ½ tsp · berries ½ cup (her) / ¾ cup (him). Blend the batter, griddle in butter.'},
+  {id:'bf-yogurt-parfait', cat:'breakfast', name:'Greek Yogurt Parfait with Berries, Almonds & Chia', tag:'fresh', rot:null,
+   her:{cal:330,p:28,c:30,f:11,fb:8}, him:{cal:520,p:42,c:47,f:17,fb:12},
+   build:'Greek yogurt 1 cup (her) / 1.5 cups (him) · berries ¾ cup (her) / 1 cup (him) · sliced almonds ½ oz (her) / 1 oz (him) · chia 1 tbsp (her) / 1.5 tbsp (him) · monk fruit to taste. No cooking — layer and go.'},
+  {id:'bf-turkey-hash', cat:'breakfast', name:'Turkey Sausage & Sweet Potato Breakfast Hash', tag:'fresh', rot:null,
+   her:{cal:360,p:33,c:28,f:12,fb:5}, him:{cal:590,p:52,c:46,f:20,fb:8},
+   build:'Lean turkey breakfast sausage 3 oz (her) / 5 oz (him) · diced sweet potato ¾ cup (her) / 1.25 cups (him) · bell pepper ½ cup (her) / ¾ cup (him) · egg 1 (her) / 2 (him) · olive oil 1 tsp · smoked paprika ½ tsp.'},
+  {id:'bf-savory-cc', cat:'breakfast', name:'Savory Cottage Cheese Bowl with Tomato & Cucumber', tag:'fresh', rot:null,
+   her:{cal:300,p:28,c:24,f:10,fb:5}, him:{cal:520,p:46,c:42,f:17,fb:8},
+   build:'Cottage cheese 1 cup (her) / 1.5 cups (him) · cherry tomatoes ½ cup (her) / ¾ cup (him) · cucumber ½ cup (her) / ¾ cup (him) · olive oil 1 tsp · wheat toast 1 slice (her) / 2 (him) · cracked pepper, everything seasoning.'},
+  {id:'bf-salmon-toast', cat:'breakfast', name:'Smoked Salmon & Egg Toast with Avocado', tag:'fresh', rot:null,
+   her:{cal:375,p:26,c:22,f:21,fb:7}, him:{cal:610,p:42,c:40,f:33,fb:11},
+   build:'Smoked salmon 2 oz (her) / 3 oz (him) · eggs 1 (her) / 2 (him) · wheat toast 1 slice (her) / 2 (him) · avocado ¼ (her) / ½ (him) · lemon, dill, capers to taste.'},
+  {id:'bf-overnight-oats', cat:'breakfast', name:'Overnight Protein Oats (no-cook)', tag:'fresh', rot:null,
+   her:{cal:349,p:24,c:44,f:6,fb:10.5}, him:{cal:588,p:44,c:72,f:9,fb:17},
+   build:'Dry oats ½ cup (her) / ¾ cup (him) · A2 milk ¾ cup (her) / 1 cup (him) · protein powder ½ scoop (her) / 1 scoop (him) · chia 1 tbsp (her) / 1.5 tbsp (him) · berries ½ cup (her) / 1 cup (him). Jar it the night before — same macros as the cooked oats.'},
+  {id:'bf-shakshuka', cat:'breakfast', name:'Shakshuka Eggs in Tomato & Pepper with Toast', tag:'fresh', rot:null,
+   her:{cal:355,p:22,c:28,f:18,fb:8}, him:{cal:590,p:36,c:46,f:30,fb:12},
+   build:'Eggs 2 (her) / 3 (him) · crushed tomatoes ¾ cup (her) / 1 cup (him) · bell pepper + onion ½ cup (her) / 1 cup (him) · olive oil 1 tsp · cumin + smoked paprika ½ tsp each · wheat toast 1 slice (her) / 2 (him).'},
+
+  /* ---------- LUNCH ---------- */
+  {id:'lu-herb-chicken', cat:'lunch', name:'Herb-Roasted Chicken Thigh Bowl', tag:'batch', rot:'Week 1',
+   her:{cal:546,p:40,c:39,f:25,fb:8}, him:{cal:838,p:64,c:58,f:38,fb:12},
+   build:'Batch of 3 servings each: chicken thighs 2.5 lbs · sweet potato 2.5 lbs · broccoli 1.75 lbs · olive oil 3 tbsp · garlic powder 2 tsp · paprika 2 tsp · thyme 1½ tsp. Roast 425°F, 25–30 min. Per meal: 5 oz chicken (her) / 8 oz (him).'},
+  {id:'lu-lemon-chicken', cat:'lunch', name:'Lemon-Oregano Chicken Thigh Bowl with Green Beans', tag:'batch', rot:'Week 2',
+   her:{cal:546,p:40,c:39,f:25,fb:8}, him:{cal:838,p:64,c:58,f:38,fb:12},
+   build:'Batch of 3 servings each: chicken thighs 2.5 lbs · sweet potato 2.5 lbs · green beans 1.75 lbs · olive oil 3 tbsp · 1 lemon · oregano 2 tsp · garlic 3 cloves. Roast 425°F, 25–30 min.'},
+  {id:'lu-chililime-chicken', cat:'lunch', name:'Chili-Lime Chicken Thigh Bowl with Peppers', tag:'batch', rot:'Week 3',
+   her:{cal:546,p:40,c:39,f:25,fb:8}, him:{cal:838,p:64,c:58,f:38,fb:12},
+   build:'Batch of 3 servings each: chicken thighs 2.5 lbs · sweet potato 2.5 lbs · bell peppers 1.75 lbs · olive oil 3 tbsp · 2 limes · chili powder 2 tsp · cumin 2 tsp · garlic 3 cloves. Roast 425°F, 25–30 min.'},
+  {id:'lu-ginger-chicken', cat:'lunch', name:'Ginger-Garlic Chicken Thigh Bowl with Broccoli', tag:'batch', rot:'Week 4',
+   her:{cal:546,p:40,c:39,f:25,fb:8}, him:{cal:838,p:64,c:58,f:38,fb:12},
+   build:'Batch of 3 servings each: chicken thighs 2.5 lbs · sweet potato 2.5 lbs · broccoli 1.75 lbs · olive oil 2 tbsp · fresh ginger 1 tbsp grated · garlic 3 cloves · tamari 3 tbsp. Roast 425°F, 25–30 min.'},
+  {id:'lu-turkey-chili', cat:'lunch', name:'Ground Turkey Sweet Potato Chili', tag:'batch', rot:'Week 1',
+   her:{cal:453,p:33,c:47,f:16,fb:13}, him:{cal:707,p:42,c:80,f:25,fb:14},
+   build:'Batch of 4 servings each: ground turkey 3 lbs · onion 1 · bell peppers 2 · diced tomatoes 28 oz can · sweet potato 2.5 lbs · broth 2 cups · chili powder 2 tbsp · cumin 1 tbsp · garlic powder 1 tbsp. Rice cooked separately — 2 cups dry (~6 cups cooked) covers all 4 servings each. Avocado ¼ (her) / ½ (him) per meal.'},
+  {id:'lu-med-turkey', cat:'lunch', name:'Mediterranean Turkey & Sweet Potato Skillet', tag:'batch', rot:'Week 2',
+   her:{cal:453,p:33,c:47,f:16,fb:13}, him:{cal:707,p:42,c:80,f:25,fb:14},
+   build:'Batch of 4 servings each: ground turkey 3 lbs · onion 1 · bell peppers 2 · diced tomatoes 28 oz can · sweet potato 2.5 lbs · broth 2 cups · oregano 2 tbsp · 1 lemon · garlic 3 cloves. Rice cooked separately — 2 cups dry (~6 cups cooked).'},
+  {id:'lu-smoky-turkey', cat:'lunch', name:'Smoky Turkey Taco Bowl with Sweet Potato & Peppers', tag:'batch', rot:'Week 3',
+   her:{cal:453,p:33,c:47,f:16,fb:13}, him:{cal:707,p:42,c:80,f:25,fb:14},
+   build:'Batch of 4 servings each: ground turkey 3 lbs · onion 1 · bell peppers 2 · diced tomatoes 28 oz can · sweet potato 2.5 lbs · broth 2 cups · chili powder 2 tbsp · cumin 1 tbsp · smoked paprika 1 tbsp · garlic powder 1 tbsp. Rice cooked separately — 2 cups dry (~6 cups cooked).'},
+  {id:'lu-ginger-turkey', cat:'lunch', name:'Ginger Turkey & Sweet Potato Skillet with Peppers', tag:'batch', rot:'Week 4',
+   her:{cal:453,p:33,c:47,f:16,fb:13}, him:{cal:707,p:42,c:80,f:25,fb:14},
+   build:'Batch of 4 servings each: ground turkey 3 lbs · onion 1 · bell peppers 2 · diced tomatoes 28 oz can · sweet potato 2.5 lbs · broth 2 cups · fresh ginger 1 tbsp · garlic 3 cloves · tamari ¼ cup. Rice cooked separately — 2 cups dry (~6 cups cooked).'},
+  {id:'lu-greek-meatball', cat:'lunch', name:'Greek Chicken Meatball & Rice Bowl', tag:'batch', rot:null,
+   her:{cal:520,p:42,c:45,f:20,fb:7}, him:{cal:820,p:62,c:72,f:30,fb:10},
+   build:'Batch of 3 servings each: ground chicken 2.5 lbs · 1 egg · almond flour ½ cup · oregano 1 tbsp · garlic 4 cloves · lemon 1 · roasted zucchini 1.5 lbs · cherry tomatoes 1 pint. Rice cooked separately — 1⅓ cups dry (~4 cups cooked) covers all 3 servings each. Bake meatballs 400°F, 18 min.'},
+  {id:'lu-balsamic-chicken', cat:'lunch', name:'Balsamic Chicken & Roasted Root Veg Bowl', tag:'batch', rot:null,
+   her:{cal:510,p:40,c:42,f:21,fb:9}, him:{cal:800,p:60,c:66,f:33,fb:13},
+   build:'Batch of 3 servings each: chicken thighs 2.5 lbs · carrots 1 lb · parsnip 1 lb · Brussels sprouts 1.5 lbs · olive oil 3 tbsp · balsamic 3 tbsp · thyme 2 tsp · garlic 3 cloves. Roast 425°F, 30 min.'},
+  {id:'lu-chipotle-black-bean', cat:'lunch', name:'Chipotle Turkey & Black Bean Chili', tag:'batch', rot:null,
+   her:{cal:505,p:38,c:56,f:13,fb:16}, him:{cal:780,p:56,c:85,f:21,fb:22},
+   build:'Batch of 4 servings each: ground turkey 2.5 lbs · black beans 2 (15 oz) cans, drained · diced tomatoes 28 oz can · onion 1 · bell peppers 2 · broth 2 cups · chipotle in adobo 2 tbsp · cumin 1 tbsp · chili powder 2 tbsp. Rice cooked separately — 2 cups dry (~6 cups cooked). The highest-fiber lunch on this list.'},
+  {id:'lu-coconut-curry', cat:'lunch', name:'Coconut Curry Chicken & Sweet Potato', tag:'batch', rot:null,
+   her:{cal:545,p:38,c:52,f:20,fb:9}, him:{cal:845,p:58,c:80,f:31,fb:12},
+   build:'Batch of 4 servings each: chicken thighs 3 lbs · sweet potato 2.5 lbs · light coconut milk 1 (13.5 oz) can · broth 1.5 cups · curry powder 2 tbsp · fresh ginger 1 tbsp · garlic 4 cloves · spinach 5 oz. Rice cooked separately — 2 cups dry (~6 cups cooked). Simmer 25 min.'},
+  {id:'lu-beef-lentil', cat:'lunch', name:'Beef & Lentil Chili', tag:'batch', rot:null,
+   her:{cal:530,p:40,c:55,f:17,fb:15}, him:{cal:820,p:60,c:84,f:26,fb:20},
+   build:'Batch of 4 servings each: grass-fed ground beef 2 lbs · brown lentils 1.5 cups dry · diced tomatoes 28 oz can · onion 1 · bell peppers 2 · broth 4 cups · chili powder 2 tbsp · cumin 1 tbsp · smoked paprika 2 tsp. Simmer 35 min until lentils are tender. Rice cooked separately — 2 cups dry (~6 cups cooked).'},
+  {id:'lu-harissa-chickpea', cat:'lunch', name:'Harissa Chicken with Chickpeas & Squash', tag:'batch', rot:null,
+   her:{cal:515,p:40,c:47,f:19,fb:13}, him:{cal:805,p:60,c:74,f:30,fb:18},
+   build:'Batch of 3 servings each: chicken thighs 2.5 lbs · chickpeas 2 (15 oz) cans, drained · butternut squash 2 lbs · red onion 1 · olive oil 3 tbsp · harissa paste 3 tbsp · cumin 2 tsp · lemon 1. Roast 425°F, 30 min.'},
+
+  /* ---------- DINNER ---------- */
+  {id:'di-beef-rice', cat:'dinner', name:'Grass-Fed Beef & Rice Skillet', tag:'batch', rot:'Week 1',
+   her:{cal:566,p:35,c:55,f:22,fb:5}, him:{cal:875,p:56,c:82,f:34,fb:7.5},
+   build:'Batch of 3 servings each: ground beef 2 lbs · bell peppers 2 · onion 1 · diced tomatoes 14.5 oz can · cooked rice 4 cups (1⅓ cups dry) · garlic powder 2 tsp · paprika 1 tsp. Per meal: 1¼ cups (her) / 2 cups (him).'},
+  {id:'di-beef-zucchini', cat:'dinner', name:'Beef & Rice Skillet with Zucchini & Tomato', tag:'batch', rot:'Week 2',
+   her:{cal:566,p:35,c:55,f:22,fb:5}, him:{cal:875,p:56,c:82,f:34,fb:7.5},
+   build:'Batch of 3 servings each: ground beef 2 lbs · zucchini 2 cups diced · onion 1 · diced tomatoes 14.5 oz can · cooked rice 4 cups · oregano 2 tsp · garlic 3 cloves.'},
+  {id:'di-beef-southwest', cat:'dinner', name:'Southwest Beef & Rice Skillet with Peppers', tag:'batch', rot:'Week 3',
+   her:{cal:566,p:35,c:55,f:22,fb:5}, him:{cal:875,p:56,c:82,f:34,fb:7.5},
+   build:'Batch of 3 servings each: ground beef 2 lbs · bell peppers 2 · onion 1 · diced tomatoes 14.5 oz can · cooked rice 4 cups · smoked paprika 2 tsp · cumin 1 tbsp.'},
+  {id:'di-beef-ginger', cat:'dinner', name:'Ginger-Garlic Beef & Rice Skillet with Peppers', tag:'batch', rot:'Week 4',
+   her:{cal:566,p:35,c:55,f:22,fb:5}, him:{cal:875,p:56,c:82,f:34,fb:7.5},
+   build:'Batch of 3 servings each: ground beef 2 lbs · bell peppers 2 · onion 1 · diced tomatoes 14.5 oz can · cooked rice 4 cups · fresh ginger 1 tbsp · garlic 3 cloves · tamari 3 tbsp.'},
+  {id:'di-turkey-taco', cat:'dinner', name:'Turkey Taco Skillet with Rice & Peppers', tag:'fresh', rot:'Week 1',
+   her:{cal:487,p:36,c:41,f:19,fb:4}, him:{cal:811,p:61,c:71,f:30,fb:7},
+   build:'Ground turkey 4 oz (her) / 7 oz (him) · cooked rice ¾ cup (her) / 1.25 cups (him) · bell pepper + onion ½ cup (her) / 1 cup (him) · shredded cheese 1 oz (her) / 1.5 oz (him) · cumin + chili powder 1 tsp each. About 20 min.'},
+  {id:'di-turkey-lemon', cat:'dinner', name:'Lemon-Oregano Turkey Skillet with Rice & Zucchini', tag:'fresh', rot:'Week 2',
+   her:{cal:487,p:36,c:41,f:19,fb:4}, him:{cal:811,p:61,c:71,f:30,fb:7},
+   build:'Ground turkey 4 oz (her) / 7 oz (him) · cooked rice ¾ cup (her) / 1.25 cups (him) · zucchini ½ cup (her) / 1 cup (him) · shredded cheese 1 oz (her) / 1.5 oz (him) · ½ lemon · oregano 1 tsp.'},
+  {id:'di-turkey-chililime', cat:'dinner', name:'Chili-Lime Turkey Skillet with Rice & Peppers', tag:'fresh', rot:'Week 3',
+   her:{cal:487,p:36,c:41,f:19,fb:4}, him:{cal:811,p:61,c:71,f:30,fb:7},
+   build:'Ground turkey 4 oz (her) / 7 oz (him) · cooked rice ¾ cup (her) / 1.25 cups (him) · bell pepper + onion ½ cup (her) / 1 cup (him) · shredded cheese 1 oz (her) / 1.5 oz (him) · 1 lime · chili powder + cumin 1 tsp each.'},
+  {id:'di-turkey-sesame', cat:'dinner', name:'Sesame-Ginger Turkey Skillet with Rice & Broccoli', tag:'fresh', rot:'Week 4',
+   her:{cal:487,p:36,c:41,f:19,fb:4}, him:{cal:811,p:61,c:71,f:30,fb:7},
+   build:'Ground turkey 4 oz (her) / 7 oz (him) · cooked rice ¾ cup (her) / 1.25 cups (him) · broccoli ½ cup (her) / 1 cup (him) · sesame oil 1 tbsp · fresh ginger 1 tsp · garlic 2 cloves · tamari 2 tbsp.'},
+  {id:'di-salmon-asparagus', cat:'dinner', name:'Baked Salmon, Potato & Asparagus', tag:'fresh', rot:'Week 1',
+   her:{cal:462,p:36,c:28,f:23,fb:5.5}, him:{cal:774,p:58,c:53,f:44,fb:9},
+   build:'Salmon 5 oz (her) / 8 oz (him) · diced potato ¾ cup (her) / 1.5 cups (him) · asparagus 1 cup (her) / 1.5 cups (him) · olive oil 1 tbsp · ½ lemon. Roast veg 425°F 20 min, salmon last 12–15 min.'},
+  {id:'di-salmon-zucchini', cat:'dinner', name:'Pan-Seared Salmon with Zucchini & Potato', tag:'fresh', rot:'Week 2',
+   her:{cal:462,p:36,c:28,f:23,fb:5.5}, him:{cal:774,p:58,c:53,f:44,fb:9},
+   build:'Salmon 5 oz (her) / 8 oz (him) · diced potato ¾ cup (her) / 1.5 cups (him) · zucchini 1 cup (her) / 1.5 cups (him) · olive oil 1 tbsp · ½ lemon · garlic 2 cloves.'},
+  {id:'di-salmon-chililime', cat:'dinner', name:'Chili-Lime Baked Salmon with Sweet Potato & Asparagus', tag:'fresh', rot:'Week 3',
+   her:{cal:462,p:36,c:28,f:23,fb:5.5}, him:{cal:774,p:58,c:53,f:44,fb:9},
+   build:'Salmon 5 oz (her) / 8 oz (him) · sweet potato ¾ cup (her) / 1.5 cups (him) · asparagus 1 cup (her) / 1.5 cups (him) · olive oil 1 tbsp · 1 lime · chili powder 1 tsp.'},
+  {id:'di-salmon-foil', cat:'dinner', name:'Foil-Packet Ginger-Garlic Salmon with Broccoli & Sweet Potato', tag:'fresh', rot:'Week 4',
+   her:{cal:462,p:36,c:28,f:23,fb:5.5}, him:{cal:774,p:58,c:53,f:44,fb:9},
+   build:'Salmon 5 oz (her) / 8 oz (him) · sweet potato ¾ cup (her) / 1.5 cups (him) · broccoli 1 cup (her) / 1.5 cups (him) · sesame oil 1 tbsp · fresh ginger 1 tsp · garlic 2 cloves · tamari 2 tbsp. Bake 425°F, 18–20 min.'},
+  {id:'di-salmon-greenbean', cat:'dinner', name:'Baked Salmon, Sweet Potato & Green Beans', tag:'fresh', rot:'Week 1',
+   her:{cal:462,p:36,c:28,f:23,fb:5.5}, him:{cal:774,p:58,c:53,f:44,fb:9},
+   build:'Salmon 5 oz (her) / 8 oz (him) · sweet potato ¾ cup (her) / 1.5 cups (him) · green beans 1 cup (her) / 1.5 cups (him) · olive oil 1 tbsp · ½ lemon.'},
+  {id:'di-caprese-pasta', cat:'dinner', name:'Caprese Salad with Brami Pasta & Chicken', tag:'fresh', rot:'Week 1',
+   her:{cal:445,p:43,c:31,f:18,fb:8}, him:{cal:878,p:87,c:58,f:39,fb:15},
+   build:'Brami pasta 1.5 oz dry (her) / 3 oz (him) · cooked chicken 3 oz (her) / 6 oz (him) · cherry tomatoes 1 cup (her) / 1.5 cups (him) · fresh mozzarella 1 oz (her) / 2 oz (him) · basil ¼ cup · olive oil 2 tbsp · balsamic 1 tbsp.'},
+  {id:'di-greek-pasta', cat:'dinner', name:'Greek Chicken & Brami Pasta Salad', tag:'fresh', rot:'Week 2',
+   her:{cal:445,p:43,c:31,f:18,fb:8}, him:{cal:878,p:87,c:58,f:39,fb:15},
+   build:'Brami pasta 1.5 oz dry (her) / 3 oz (him) · cooked chicken 3 oz (her) / 6 oz (him) · cucumber + cherry tomato 1 cup (her) / 1.5 cups (him) · feta 1 oz (her) / 2 oz (him) · red onion ¼ cup · oregano 1 tsp · olive oil 2 tbsp · 1 lemon.'},
+  {id:'di-southwest-bowl', cat:'dinner', name:'Southwest Chicken & Rice Bowl with Avocado-Lime Crema', tag:'fresh', rot:'Week 3',
+   her:{cal:489,p:37,c:45,f:19,fb:7.5}, him:{cal:884,p:71,c:69,f:37,fb:13},
+   build:'Cooked chicken 4 oz (her) / 8 oz (him) · cooked rice ⅔ cup (her) / 1 cup (him) · sautéed peppers ⅔ cup (her) / 1 cup (him) · avocado ¼ (her) / ½ (him) · Greek yogurt 2 tbsp (her) / ¼ cup (him) · 1 lime · cumin + chili powder 1 tsp each.'},
+  {id:'di-sesame-noodle', cat:'dinner', name:'Sesame-Ginger Chicken & Brami Noodle Salad', tag:'fresh', rot:'Week 4',
+   her:{cal:445,p:43,c:31,f:18,fb:8}, him:{cal:878,p:87,c:58,f:39,fb:15},
+   build:'Brami pasta 1.5 oz dry (her) / 3 oz (him) · cooked chicken 3 oz (her) / 6 oz (him) · broccoli slaw 1 cup (her) / 1.5 cups (him) · scallion + sesame seeds 1 tbsp (her) / 1.5 tbsp (him) · sesame oil 2 tbsp · ginger 1 tsp · garlic 2 cloves · tamari 2 tbsp · 1 lime.'},
+  {id:'di-tilapia-lemon', cat:'dinner', name:'Lemon-Oregano Baked Tilapia with Sweet Potato & Asparagus', tag:'fresh', rot:'Week 2',
+   her:{cal:471,p:44,c:44,f:13,fb:7}, him:{cal:823,p:63,c:69,f:33,fb:14},
+   build:'Tilapia 5 oz (her) / 7 oz (him) · sweet potato ¾ cup (her) / 1 cup (him) · asparagus 1 cup (her) / 1.5 cups (him) · olive oil 1 tbsp · ½ lemon · oregano 1 tsp · garlic 2 cloves.'},
+  {id:'di-tilapia-blackened', cat:'dinner', name:'Blackened Tilapia with Green Beans & Potato', tag:'fresh', rot:'Week 3',
+   her:{cal:471,p:44,c:44,f:13,fb:7}, him:{cal:823,p:63,c:69,f:33,fb:14},
+   build:'Tilapia 5 oz (her) / 7 oz (him) · diced potato ¾ cup (her) / 1 cup (him) · green beans 1 cup (her) / 1.5 cups (him) · olive oil 1 tbsp · smoked paprika + cumin + chili powder 1 tsp each · 1 lime.'},
+  {id:'di-tilapia-sesame', cat:'dinner', name:'Sesame-Ginger Tilapia with Green Beans & Potato', tag:'fresh', rot:'Week 4',
+   her:{cal:471,p:44,c:44,f:13,fb:7}, him:{cal:823,p:63,c:69,f:33,fb:14},
+   build:'Tilapia 5 oz (her) / 7 oz (him) · diced potato ¾ cup (her) / 1 cup (him) · green beans 1 cup (her) / 1.5 cups (him) · sesame oil 1 tbsp · ginger 1 tsp · garlic 2 cloves · tamari 2 tbsp.'},
+  {id:'di-shrimp-stirfry', cat:'dinner', name:'Shrimp & Broccoli Stir-Fry with Rice', tag:'fresh', rot:null,
+   her:{cal:470,p:42,c:48,f:11,fb:6}, him:{cal:790,p:68,c:80,f:19,fb:9},
+   build:'Shrimp 6 oz (her) / 10 oz (him) · broccoli 1.5 cups (her) / 2 cups (him) · cooked rice ¾ cup (her) / 1.25 cups (him) · sesame oil 1 tbsp · ginger 1 tsp · garlic 2 cloves · tamari 2 tbsp · scallion. About 15 min.'},
+  {id:'di-sausage-sheetpan', cat:'dinner', name:'Sheet-Pan Chicken Sausage, Peppers & Potatoes', tag:'fresh', rot:null,
+   her:{cal:520,p:38,c:45,f:21,fb:7}, him:{cal:850,p:60,c:74,f:34,fb:10},
+   build:'Chicken sausage (no added sugar) 5 oz (her) / 8 oz (him) · baby potatoes 1 cup (her) / 1.75 cups (him) · bell peppers + onion 1.5 cups (her) / 2 cups (him) · olive oil 1 tbsp · Italian herbs 1 tsp. Roast 425°F, 25 min, one pan.'},
+  {id:'di-beef-broccoli', cat:'dinner', name:'Beef & Broccoli Rice Bowl', tag:'fresh', rot:null,
+   her:{cal:545,p:40,c:50,f:19,fb:7}, him:{cal:870,p:62,c:82,f:32,fb:10},
+   build:'Flank or sirloin steak, sliced 5 oz (her) / 8 oz (him) · broccoli 1.5 cups (her) / 2 cups (him) · cooked rice ¾ cup (her) / 1.25 cups (him) · tamari 3 tbsp · ginger 1 tbsp · garlic 3 cloves · sesame oil 1 tbsp · arrowroot 1 tsp to thicken.'},
+  {id:'di-pesto-salmon', cat:'dinner', name:'Pesto Salmon with Green Beans & Potatoes', tag:'fresh', rot:null,
+   her:{cal:505,p:38,c:33,f:25,fb:6}, him:{cal:830,p:60,c:56,f:42,fb:9},
+   build:'Salmon 5 oz (her) / 8 oz (him) · basil pesto 1 tbsp (her) / 2 tbsp (him) · green beans 1 cup (her) / 1.5 cups (him) · baby potatoes ¾ cup (her) / 1.5 cups (him) · olive oil 1 tbsp · lemon. Roast veg 20 min, salmon last 12–15 min.'},
+  {id:'di-cod-white-bean', cat:'dinner', name:'Baked Cod with White Beans & Spinach', tag:'fresh', rot:null,
+   her:{cal:460,p:44,c:34,f:14,fb:10}, him:{cal:760,p:66,c:58,f:25,fb:14},
+   build:'Cod 6 oz (her) / 9 oz (him) · cannellini beans ¾ cup (her) / 1.25 cups (him) · spinach 2 cups (her) / 3 cups (him) · cherry tomatoes ½ cup · olive oil 1 tbsp · garlic 3 cloves · lemon. Bake 400°F, 15 min.'},
+  {id:'di-turkey-meatball-pasta', cat:'dinner', name:'Turkey Meatballs with Brami Pasta & Marinara', tag:'fresh', rot:null,
+   her:{cal:500,p:44,c:38,f:19,fb:11}, him:{cal:830,p:72,c:62,f:32,fb:16},
+   build:'Ground turkey 5 oz (her) / 8 oz (him) · 1 egg + almond flour ¼ cup for the batch · marinara, no added sugar ¾ cup (her) / 1 cup (him) · Brami pasta 1.5 oz dry (her) / 3 oz (him) · parmesan ½ oz (her) / 1 oz (him) · garlic, oregano, basil.'},
+  {id:'di-steak-fajita', cat:'dinner', name:'Steak Fajita Bowl', tag:'fresh', rot:null,
+   her:{cal:540,p:42,c:44,f:21,fb:8}, him:{cal:870,p:66,c:76,f:34,fb:11},
+   build:'Sirloin, sliced 5 oz (her) / 8 oz (him) · bell peppers + onion 1.5 cups (her) / 2 cups (him) · cooked rice ⅔ cup (her) / 1 cup (him) · avocado ¼ (her) / ½ (him) · lime · cumin + chili powder 1 tsp each · olive oil 1 tbsp.'},
+  {id:'di-almond-chicken', cat:'dinner', name:'Almond-Crusted Chicken with Brami Pasta', tag:'fresh', rot:null,
+   her:{cal:520,p:48,c:34,f:21,fb:10}, him:{cal:860,p:78,c:56,f:35,fb:14},
+   build:'Chicken breast 6 oz (her) / 9 oz (him) · almond flour ¼ cup + parmesan ½ oz for the crust · Brami pasta 1.5 oz dry (her) / 3 oz (him) · marinara, no added sugar ½ cup · arugula 2 cups · olive oil 1 tbsp. Bake 425°F, 20 min.'},
+  {id:'di-pork-brussels', cat:'dinner', name:'Pork Tenderloin with Roasted Apple & Brussels Sprouts', tag:'fresh', rot:null,
+   her:{cal:480,p:42,c:36,f:18,fb:9}, him:{cal:790,p:64,c:62,f:29,fb:12},
+   build:'Pork tenderloin 5 oz (her) / 8 oz (him) · Brussels sprouts 1.5 cups (her) / 2 cups (him) · apple 1, sliced · baby potatoes ½ cup (her) / 1 cup (him) · olive oil 1 tbsp · dijon 1 tsp · thyme. Roast 425°F, 22 min.'},
+
+  /* ---------- SNACKS ---------- */
+  {id:'sn-yogurt-berries', cat:'snack', name:'Greek Yogurt, Berries & Chia', tag:'fresh', rot:'All weeks',
+   her:{cal:241,p:27,c:23,f:3,fb:6}, him:{cal:380,p:40,c:39,f:5,fb:10.5},
+   build:'Greek yogurt 1 cup (her) / 1.5 cups (him) · berries ½ cup (her) / 1 cup (him) · chia 1 tbsp (her) / 1.5 tbsp (him) · monk fruit to taste.'},
+  {id:'sn-apple-ab', cat:'snack', name:'Apple + Almond Butter', tag:'fresh', rot:'All weeks',
+   her:{cal:192,p:4,c:28,f:9,fb:6}, him:{cal:290,p:7,c:31,f:18,fb:7.5},
+   build:'Apple 1 · almond butter 1 tbsp (her) / 2 tbsp (him).'},
+  {id:'sn-protein-shake', cat:'snack', name:'Protein Shake', tag:'fresh', rot:'All weeks',
+   her:{cal:319,p:33,c:28,f:9,fb:1.6}, him:{cal:373,p:34,c:42,f:9,fb:3},
+   build:'Protein powder 1 scoop · A2 milk 1 cup · banana ½ (her) / 1 (him).'},
+  {id:'sn-kefir-almonds', cat:'snack', name:'Kefir + Almonds', tag:'fresh', rot:'All weeks',
+   her:{cal:260,p:14,c:18,f:20,fb:3.5}, him:{cal:391,p:21,c:26,f:29,fb:5},
+   build:'Kefir 1 cup (her) / 1.5 cups (him) · raw almonds 1 oz (her) / 1.5 oz (him).'},
+  {id:'sn-orange-eggs', cat:'snack', name:'Orange + Hard-Boiled Eggs', tag:'fresh', rot:'All weeks',
+   her:{cal:205,p:14,c:16,f:10,fb:3}, him:{cal:277,p:20,c:17,f:15,fb:3},
+   build:'Orange 1 · hard-boiled eggs 2 (her) / 3 (him).'},
+  {id:'sn-cc-pineapple', cat:'snack', name:'Cottage Cheese + Pineapple', tag:'fresh', rot:null,
+   her:{cal:190,p:22,c:18,f:3,fb:1}, him:{cal:275,p:31,c:26,f:4,fb:1.5},
+   build:'Low-fat cottage cheese ¾ cup (her) / 1 cup (him) · fresh pineapple ½ cup (her) / ¾ cup (him).'},
+  {id:'sn-turkey-rollups', cat:'snack', name:'Turkey & Cheese Roll-Ups with Cucumber', tag:'fresh', rot:null,
+   her:{cal:200,p:24,c:6,f:9,fb:1}, him:{cal:300,p:36,c:9,f:13,fb:1.5},
+   build:'Sliced turkey breast, no nitrates 3 oz (her) / 4.5 oz (him) · cheddar or provolone ½ oz (her) / 1 oz (him) · cucumber spears 1 cup · mustard to dip.'},
+  {id:'sn-edamame', cat:'snack', name:'Sea Salt Edamame', tag:'fresh', rot:null,
+   her:{cal:190,p:17,c:14,f:8,fb:8}, him:{cal:285,p:25,c:21,f:12,fb:12},
+   build:'Shelled edamame 1 cup (her) / 1.5 cups (him) · flaky sea salt. Steam 5 min. One of the easiest fiber wins on the list.'},
+  {id:'sn-chia-pudding', cat:'snack', name:'Protein Chia Pudding', tag:'fresh', rot:null,
+   her:{cal:250,p:25,c:20,f:9,fb:9}, him:{cal:355,p:33,c:28,f:13,fb:12},
+   build:'Chia 2 tbsp (her) / 3 tbsp (him) · A2 milk ¾ cup (her) / 1 cup (him) · protein powder ½ scoop (her) / ¾ scoop (him) · berries ¼ cup · monk fruit. Set overnight.'},
+  {id:'sn-tuna-cucumber', cat:'snack', name:'Tuna Pouch with Cucumber Rounds', tag:'fresh', rot:null,
+   her:{cal:230,p:28,c:18,f:4,fb:1}, him:{cal:330,p:40,c:26,f:6,fb:1.5},
+   build:'Wild tuna pouch 1 (her) / 1.5 (him) · cucumber rounds 1 cup · brown rice cakes 1 (her) / 2 (him) · lemon, black pepper.'},
+  {id:'sn-chickpeas-cheese', cat:'snack', name:'Roasted Chickpeas + String Cheese', tag:'fresh', rot:null,
+   her:{cal:245,p:16,c:26,f:9,fb:7}, him:{cal:340,p:22,c:36,f:13,fb:10},
+   build:'Roasted chickpeas ⅓ cup (her) / ½ cup (him) · string cheese 1 (her) / 2 (him). Roast a 15 oz can at 400°F for 30 min with olive oil and paprika — makes about 6 snack portions.'},
+];
+
+let selected = {};
+let custom = [];
+
+function allItems(){ return ITEMS.concat(custom); }
+
+function defaultSelection(){
+  const s = {};
+  ITEMS.forEach(i=>{ if(i.rot) s[i.id] = true; });
+  return s;
+}
+
+function macroLine(who, m){
+  const label = who === 'her' ? 'Her' : 'Him';
+  return `<span class="${who}"><span class="who">${label}</span> ${m.cal} cal <span class="line">·</span> ${m.p}g protein${m.fb!=null?` <span class="line">·</span> ${m.fb}g fiber`:''}</span>`;
+}
+
+function cardHTML(item){
+  const on = !!selected[item.id];
+  return `<div class="card ${on?'on':'off'}" data-card="${item.id}">
+    <label class="card-top">
+      <input type="checkbox" data-id="${item.id}" ${on?'checked':''}>
+      <span>
+        <span class="card-name">${item.name}</span>
+        <span class="badges">
+          <span class="tag ${item.tag}">${item.tag==='batch'?'🔁 batch-cooked':'🍳 cooked fresh'}</span>
+          ${item.rot?`<span class="tag rot">in ${item.rot}</span>`:''}
+          ${item.mine?'<span class="tag mine">yours</span>':''}
+        </span>
+      </span>
+    </label>
+    <div class="macros">
+      ${macroLine('her', item.her)}
+      ${macroLine('him', item.him)}
+    </div>
+    <details>
+      <summary>What's in it</summary>
+      <div class="build">
+        ${item.build || 'No ingredients saved yet.'}
+        ${item.mine?`<div class="del"><button class="link" data-del="${item.id}">Delete this recipe</button></div>`:''}
+      </div>
+    </details>
+  </div>`;
+}
+
+function render(){
+  const items = allItems();
+  document.getElementById('sections').innerHTML = SECTIONS.map(sec=>{
+    const list = items.filter(i=>i.cat===sec.key);
+    const picked = list.filter(i=>selected[i.id]).length;
+    return `<div class="sec-head">
+        <span class="sec-title">${sec.label}</span>
+        <span class="sec-count" id="count-${sec.key}">${picked} of ${list.length} checked</span>
+        <span class="sec-actions">
+          <button class="link" data-all="${sec.key}">Check all</button>
+          <button class="link" data-none="${sec.key}">Uncheck all</button>
+        </span>
+      </div>
+      <p class="sec-env">${sec.env}</p>
+      ${list.map(cardHTML).join('')}`;
+  }).join('');
+
+  document.getElementById('tally').innerHTML = SECTIONS.map(sec=>{
+    const list = items.filter(i=>i.cat===sec.key);
+    const picked = list.filter(i=>selected[i.id]).length;
+    return `<button class="pill" data-jump="${sec.key}">${sec.label} <b>${picked}</b>/${list.length}</button>`;
+  }).join('');
+
+  wire();
+}
+
+function wire(){
+  document.querySelectorAll('input[type=checkbox][data-id]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      selected[cb.dataset.id] = cb.checked;
+      if(!cb.checked) delete selected[cb.dataset.id];
+      const card = document.querySelector(`[data-card="${cb.dataset.id}"]`);
+      if(card){ card.classList.toggle('on', cb.checked); card.classList.toggle('off', !cb.checked); }
+      refreshCounts();
+      store.set(KEY_SEL, selected);
+    });
+  });
+  document.querySelectorAll('[data-all]').forEach(b=>{
+    b.addEventListener('click', ()=>{ setSection(b.dataset.all, true); });
+  });
+  document.querySelectorAll('[data-none]').forEach(b=>{
+    b.addEventListener('click', ()=>{ setSection(b.dataset.none, false); });
+  });
+  document.querySelectorAll('[data-del]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      custom = custom.filter(c=>c.id !== b.dataset.del);
+      delete selected[b.dataset.del];
+      store.set(KEY_CUSTOM, custom);
+      store.set(KEY_SEL, selected);
+      render();
+    });
+  });
+  document.querySelectorAll('[data-jump]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const el = document.getElementById('count-' + b.dataset.jump);
+      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+}
+
+function setSection(catKey, on){
+  allItems().filter(i=>i.cat===catKey).forEach(i=>{
+    if(on) selected[i.id] = true; else delete selected[i.id];
+  });
+  store.set(KEY_SEL, selected);
+  render();
+}
+
+function refreshCounts(){
+  const items = allItems();
+  SECTIONS.forEach(sec=>{
+    const list = items.filter(i=>i.cat===sec.key);
+    const picked = list.filter(i=>selected[i.id]).length;
+    const el = document.getElementById('count-' + sec.key);
+    if(el) el.textContent = `${picked} of ${list.length} checked`;
+  });
+  const items2 = items;
+  document.querySelectorAll('[data-jump]').forEach(b=>{
+    const list = items2.filter(i=>i.cat===b.dataset.jump);
+    const picked = list.filter(i=>selected[i.id]).length;
+    const sec = SECTIONS.find(s=>s.key===b.dataset.jump);
+    b.innerHTML = `${sec.label} <b>${picked}</b>/${list.length}`;
+  });
+}
+
+/* ---------- Export ---------- */
+function buildExport(){
+  const items = allItems();
+  let out = 'WEEKLY BOARD — RECIPES I WANT IN THE ROTATION\n';
+  SECTIONS.forEach(sec=>{
+    const list = items.filter(i=>i.cat===sec.key && selected[i.id]);
+    if(!list.length) return;
+    out += `\n${sec.label.toUpperCase()} (${list.length})\n`;
+    list.forEach(i=>{
+      out += `- ${i.name} [${i.tag}]${i.rot?` — currently in ${i.rot}`:''}\n`;
+      out += `  her ${i.her.cal} cal / ${i.her.p}g P · him ${i.him.cal} cal / ${i.him.p}g P\n`;
+      if(i.mine && i.build) out += `  ${i.build}\n`;
+    });
+  });
+  const total = items.filter(i=>selected[i.id]).length;
+  if(total === 0) out += '\nNothing checked yet.\n';
+  return out;
+}
+
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  const p = document.getElementById('exportPanel');
+  document.getElementById('exportText').value = buildExport();
+  p.classList.remove('hidden');
+  p.scrollIntoView({behavior:'smooth', block:'start'});
+});
+document.getElementById('btnCloseExport').addEventListener('click', ()=>{
+  document.getElementById('exportPanel').classList.add('hidden');
+});
+document.getElementById('btnCopy').addEventListener('click', async ()=>{
+  const ta = document.getElementById('exportText');
+  const btn = document.getElementById('btnCopy');
+  try{
+    await navigator.clipboard.writeText(ta.value);
+    btn.textContent = 'Copied';
+  }catch(e){
+    ta.select();
+    btn.textContent = 'Press copy on your keyboard';
+  }
+  setTimeout(()=>{ btn.textContent = 'Copy to clipboard'; }, 2200);
+});
+
+/* ---------- Add a recipe ---------- */
+document.getElementById('btnAdd').addEventListener('click', ()=>{
+  const p = document.getElementById('addPanel');
+  p.classList.toggle('hidden');
+  if(!p.classList.contains('hidden')) p.scrollIntoView({behavior:'smooth', block:'start'});
+});
+document.getElementById('btnCancelAdd').addEventListener('click', ()=>{
+  document.getElementById('addPanel').classList.add('hidden');
+});
+document.getElementById('btnSaveRecipe').addEventListener('click', ()=>{
+  const name = document.getElementById('fName').value.trim();
+  if(!name){ document.getElementById('fName').focus(); return; }
+  const num = id => { const v = parseInt(document.getElementById(id).value, 10); return isNaN(v) ? 0 : v; };
+  const item = {
+    id: 'my-' + Date.now(),
+    cat: document.getElementById('fCat').value,
+    name: name,
+    tag: document.getElementById('fTag').value,
+    rot: null,
+    mine: true,
+    her:{cal:num('fHerCal'), p:num('fHerP')},
+    him:{cal:num('fHimCal'), p:num('fHimP')},
+    build: document.getElementById('fBuild').value.trim()
+  };
+  custom.push(item);
+  selected[item.id] = true;
+  store.set(KEY_CUSTOM, custom);
+  store.set(KEY_SEL, selected);
+  ['fName','fHerCal','fHerP','fHimCal','fHimP','fBuild'].forEach(id=>{ document.getElementById(id).value = ''; });
+  document.getElementById('addPanel').classList.add('hidden');
+  render();
+  const card = document.querySelector(`[data-card="${item.id}"]`);
+  if(card) card.scrollIntoView({behavior:'smooth', block:'center'});
+});
+
+document.getElementById('btnClearAll').addEventListener('click', ()=>{
+  selected = {};
+  store.set(KEY_SEL, selected);
+  render();
+});
+
+/* ---------- Boot ---------- */
+(async function init(){
+  const savedSel = await store.get(KEY_SEL);
+  const savedCustom = await store.get(KEY_CUSTOM);
+  selected = savedSel && typeof savedSel === 'object' ? savedSel : defaultSelection();
+  custom = Array.isArray(savedCustom) ? savedCustom : [];
+  if(!savedSel) store.set(KEY_SEL, selected);
+  render();
+})();
+</script>
+</body>
+</html>
