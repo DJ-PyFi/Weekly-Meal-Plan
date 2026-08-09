@@ -96,6 +96,13 @@
   }
   nav.sections button:hover{border-color:var(--fresh);color:var(--paper);}
   nav.sections button.active{background:var(--paper);color:var(--ink);border-color:var(--paper);font-weight:600;}
+  nav.sections a.linkout{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    background:transparent;color:var(--batch);border:1px dashed rgba(124,154,110,.55);padding:9px 16px;border-radius:999px;
+    text-decoration:none;transition:.15s;display:inline-flex;align-items:center;gap:6px;
+  }
+  nav.sections a.linkout:hover{border-style:solid;border-color:var(--batch);color:var(--paper);}
+  nav.sections a.linkout:focus-visible, nav.sections button:focus-visible{outline:2px solid var(--fresh);outline-offset:2px;}
 
   .view{display:none;} .view.active{display:block;animation:fade .25s ease;}
   @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
@@ -222,6 +229,7 @@
     <button class="active" data-view="week">Week Plan</button>
     <button data-view="prep">Prep Schedule</button>
     <button data-view="grocery">Grocery List</button>
+    <a class="linkout" href="recipe-library.html">Recipe Library ↗</a>
   </nav>
 
   <section id="week" class="view active">
