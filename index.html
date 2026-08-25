@@ -8,7 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Franklin:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="config.js"></script>
 <style>
   :root{
     --bg:#1E2A1F;
@@ -96,13 +95,6 @@
   }
   nav.sections button:hover{border-color:var(--fresh);color:var(--paper);}
   nav.sections button.active{background:var(--paper);color:var(--ink);border-color:var(--paper);font-weight:600;}
-  nav.sections a.linkout{
-    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
-    background:transparent;color:var(--batch);border:1px dashed rgba(124,154,110,.55);padding:9px 16px;border-radius:999px;
-    text-decoration:none;transition:.15s;display:inline-flex;align-items:center;gap:6px;
-  }
-  nav.sections a.linkout:hover{border-style:solid;border-color:var(--batch);color:var(--paper);}
-  nav.sections a.linkout:focus-visible, nav.sections button:focus-visible{outline:2px solid var(--fresh);outline-offset:2px;}
 
   .view{display:none;} .view.active{display:block;animation:fade .25s ease;}
   @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
@@ -137,12 +129,6 @@
     background:var(--paper);color:var(--ink);border-radius:12px;margin-bottom:14px;overflow:hidden;
     box-shadow:0 6px 18px rgba(0,0,0,.18);
   }
-  .meal.eating-out{
-    background:transparent;box-shadow:none;border:1.5px dashed rgba(245,240,227,.35);
-  }
-  .meal.eating-out .meal-title{color:var(--fresh);}
-  .meal.eating-out .meal-cooked{color:#B9C0AE;}
-  .meal.eating-out .meal-slot{color:#7E886F;}
   .meal-head{display:flex;align-items:center;justify-content:space-between;padding:15px 18px 12px;gap:10px;flex-wrap:wrap;}
   .meal-slot{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);}
   .meal-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.02em;margin:2px 0 0;line-height:1;}
@@ -179,6 +165,7 @@
   .trip-label{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.02em;color:var(--paper);}
   .trip-header.trip-1 .trip-label{color:var(--fresh);}
   .trip-header.trip-2 .trip-label{color:var(--her);}
+  .trip-header.trip-weekly .trip-label{color:var(--batch);}
   .trip-when{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA491;letter-spacing:.03em;}
   .trip-count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--fresh);letter-spacing:.03em;white-space:nowrap;}
   .grocery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
@@ -216,7 +203,7 @@
   <header>
     <div class="eyebrow">Two Plates · One Kitchen</div>
     <h1>THE WEEKLY <span>BOARD</span></h1>
-    <p class="subhead">A 4-week rotation built around two smaller shop-and-batch-cook sessions each week — Sunday and Wednesday — so nothing sits in the fridge too long. Each batch covers dinner the night it's cooked through the next round of lunches, Thursday through Saturday dinners are cooked fresh, and Sunday lunch is left open for eating out. Same targets and portions every week; the flavors rotate.</p>
+    <p class="subhead">A 4-week rotation built around two smaller shop-and-batch-cook sessions each week — Sunday and Wednesday — so nothing sits in the fridge too long, plus breakfasts, salmon, and caprese night cooked fresh. Same targets and portions every week; the flavors rotate.</p>
     <svg class="squiggle" viewBox="0 0 140 14"><path d="M0 7 Q 10 0, 20 7 T 40 7 T 60 7 T 80 7 T 100 7 T 120 7 T 140 7" fill="none" stroke="#D9A441" stroke-width="2" stroke-linecap="round"/></svg>
     <div class="legend">
       <span><span class="dot him"></span>Him — 174 lb, active — target 2,700–3,000 cal / ~190g protein</span>
@@ -235,7 +222,6 @@
     <button class="active" data-view="week">Week Plan</button>
     <button data-view="prep">Prep Schedule</button>
     <button data-view="grocery">Grocery List</button>
-    <a class="linkout" href="recipe-library.html">Recipe Library ↗</a>
   </nav>
 
   <section id="week" class="view active">
@@ -252,7 +238,7 @@
 
   <section id="grocery" class="view">
     <div class="block-title">Grocery List</div>
-    <div class="block-sub">Split into two fresh-food runs so nothing spoils by week's end — plus a pantry list you can grab anytime.</div>
+    <div class="block-sub">Split into two fresh-food runs so nothing spoils by week's end — plus a pantry list and a weekly basics list for the longer-shelf-life stuff.</div>
 
     <div class="trip-header">
       <span class="trip-label">Pantry</span>
@@ -262,9 +248,17 @@
     </div>
     <div class="grocery-grid" id="groceryPantry"></div>
 
+    <div class="trip-header trip-weekly">
+      <span class="trip-label">🥚 Weekly Basics</span>
+      <span class="trip-when">Buy once a week — eggs, dairy, frozen berries keep all week</span>
+      <span class="trip-count" id="countWeekly"></span>
+      <button class="reset-link" data-reset="weekly">Reset</button>
+    </div>
+    <div class="grocery-grid" id="groceryWeekly"></div>
+
     <div class="trip-header trip-1">
       <span class="trip-label">🛒 Trip 1 — Saturday</span>
-      <span class="trip-when">Feeds Sunday dinner through Wednesday lunch</span>
+      <span class="trip-when">Feeds Sunday's batch cook + Mon, Tue, Wed</span>
       <span class="trip-count" id="countTrip1"></span>
       <button class="reset-link" data-reset="trip1">Reset</button>
     </div>
@@ -272,13 +266,13 @@
 
     <div class="trip-header trip-2">
       <span class="trip-label">🛒 Trip 2 — Wednesday</span>
-      <span class="trip-when">Feeds Wednesday dinner through Saturday (Sunday lunch is skipped — eating out)</span>
+      <span class="trip-when">Feeds Wednesday's batch cook + Thu, Fri, Sat, Sun</span>
       <span class="trip-count" id="countTrip2"></span>
       <button class="reset-link" data-reset="trip2">Reset</button>
     </div>
     <div class="grocery-grid" id="groceryTrip2"></div>
 
-    <p class="g-note">Eggs, egg whites, Greek yogurt, kefir, milk, and frozen berries are only on Trip 1's list — they keep well past Wednesday, so there's no need to buy them twice. Everything else fresh (meat, fish, produce, cheese) is split across the two trips so it stays close to its purchase date. The pantry list (rice, oats, pasta, nuts, spices, protein powder) is shelf-stable — grab it whenever's convenient. Rice shows up in 3 recipes a week, so the 7–8 lb total is for the whole 4-week rotation, not one trip. A few items — fresh mozzarella, basil, asparagus/green beans, cherry tomatoes — are easy Whole Foods or Target add-ons if Aldi doesn't have them that week. Checked-off items are saved automatically.</p>
+    <p class="g-note">Fresh proteins and produce are split across the two trips above so everything stays close to its purchase date. Eggs, Greek yogurt, kefir, milk, and frozen berries keep well enough to buy once for the whole week, so they're combined into Weekly Basics instead of being split (and double-bought) across both trips. The pantry list (rice, oats, pasta, nuts, spices, protein powder, canned tomatoes, and broth) is shelf-stable — grab it whenever's convenient, no need to re-buy each trip. Rice shows up in 3 recipes a week, so the 7–8 lb total is for the whole 4-week rotation, not one trip. A few items — fresh mozzarella, basil, asparagus/green beans, cherry tomatoes — are easy Whole Foods or Target add-ons if Aldi doesn't have them that week. Checked-off items are saved automatically.</p>
   </section>
 
   <footer>MACROS ARE ESTIMATES · EXPECT ±10% REAL-WORLD VARIANCE</footer>
@@ -286,40 +280,39 @@
 
 <script>
 const MACROS = {
-  eggBF:      {him:{cal:655,p:41,c:49,f:34,fb:16}, her:{cal:380,p:25,c:24,f:21,fb:7}},
-  oatsBF:     {him:{cal:627,p:44,c:71,f:22,fb:15}, her:{cal:354,p:26,c:38,f:13,fb:11}},
-  smoothieBF: {him:{cal:599,p:51,c:86,f:14,fb:22}, her:{cal:308,p:26,c:45,f:9,fb:13}},
-  chickenLunch:{him:{cal:807,p:55,c:63,f:32,fb:14}, her:{cal:443,p:36,c:34,f:20,fb:8}},
-  turkeyLunch: {him:{cal:800,p:48,c:88,f:26,fb:17}, her:{cal:440,p:35,c:44,f:15,fb:12}},
-  beefDinner:  {him:{cal:830,p:65,c:53,f:37,fb:10.5}, her:{cal:486,p:39,c:31,f:21,fb:6}},
-  salmonDinner:{him:{cal:830,p:60,c:60,f:44,fb:10}, her:{cal:447,p:37,c:25,f:23,fb:6}},
-  capreseDinner:{him:{cal:840,p:80,c:56,f:37,fb:14},her:{cal:460,p:43,c:32,f:19,fb:8}},
-  southwestBowlDinner:{him:{cal:840,p:68,c:66,f:35,fb:12}, her:{cal:470,p:37,c:44,f:18,fb:7.5}},
-  turkeyFreshDinner:{him:{cal:830,p:62,c:72,f:31,fb:7}, her:{cal:465,p:36,c:40,f:18,fb:4}},
-  steakBowlDinner:{him:{cal:830,p:65,c:72,f:31,fb:10}, her:{cal:470,p:40,c:40,f:17,fb:8}},
-  gochujangDinner:{him:{cal:830,p:64,c:68,f:28,fb:9}, her:{cal:470,p:36,c:42,f:15,fb:7}},
-  s1:{him:{cal:300,p:32,c:29,f:4,fb:8},   her:{cal:235,p:26,c:22,f:3,fb:6}},
-  s2:{him:{cal:295,p:7,c:32,f:18,fb:7.5}, her:{cal:225,p:5,c:29,f:11,fb:6}},
-  s3:{him:{cal:284,p:28,c:26,f:5,fb:3},   her:{cal:247,p:26,c:22,f:4,fb:2}},
-  s4:{him:{cal:285,p:26,c:20,f:15,fb:4},  her:{cal:225,p:24,c:16,f:11,fb:3}},
-  s5:{him:{cal:277,p:20,c:17,f:15,fb:3},  her:{cal:205,p:14,c:16,f:10,fb:3}},
-  s6:{him:{cal:305,p:30,c:24,f:12,fb:9},  her:{cal:245,p:24,c:20,f:9,fb:8}},
+  eggBF:      {him:{cal:600,p:32,c:43,f:34,fb:16}, her:{cal:354,p:19,c:22,f:25,fb:8}},
+  oatsBF:     {him:{cal:588,p:44,c:72,f:9,fb:17},  her:{cal:349,p:24,c:44,f:6,fb:10.5}},
+  smoothieBF: {him:{cal:521,p:43,c:68,f:8,fb:14},  her:{cal:291,p:24,c:36,f:5,fb:8.5}},
+  chickenLunch:{him:{cal:838,p:64,c:58,f:38,fb:12}, her:{cal:546,p:40,c:39,f:25,fb:8}},
+  turkeyLunch: {him:{cal:707,p:42,c:80,f:25,fb:14}, her:{cal:453,p:33,c:47,f:16,fb:13}},
+  beefDinner:  {him:{cal:875,p:56,c:82,f:34,fb:7.5},her:{cal:566,p:35,c:55,f:22,fb:5}},
+  salmonDinner:{him:{cal:774,p:58,c:53,f:44,fb:9},  her:{cal:462,p:36,c:28,f:23,fb:5.5}},
+  tilapiaDinner:{him:{cal:823,p:63,c:69,f:33,fb:14},her:{cal:471,p:44,c:44,f:13,fb:7}},
+  capreseDinner:{him:{cal:878,p:87,c:58,f:39,fb:15},her:{cal:445,p:43,c:31,f:18,fb:8}},
+  southwestBowlDinner:{him:{cal:884,p:71,c:69,f:37,fb:13}, her:{cal:489,p:37,c:45,f:19,fb:7.5}},
+  turkeyFreshDinner:{him:{cal:811,p:61,c:71,f:30,fb:7}, her:{cal:487,p:36,c:41,f:19,fb:4}},
+  s1:{him:{cal:380,p:40,c:39,f:5,fb:10.5}, her:{cal:241,p:27,c:23,f:3,fb:6}},
+  s2:{him:{cal:290,p:7,c:31,f:18,fb:7.5},  her:{cal:192,p:4,c:28,f:9,fb:6}},
+  s3:{him:{cal:373,p:34,c:42,f:9,fb:3},    her:{cal:319,p:33,c:28,f:9,fb:1.6}},
+  s4:{him:{cal:391,p:21,c:26,f:29,fb:5},   her:{cal:260,p:14,c:18,f:20,fb:3.5}},
+  s5:{him:{cal:277,p:20,c:17,f:15,fb:3},   her:{cal:205,p:14,c:16,f:10,fb:3}},
 };
 
 const DAYS = [
-  {label:"Mon", date:"Day 1", slots:{Breakfast:"bf2", Lunch:"la", Dinner:"da", "Snack 1":"s1", "Snack 2":"s5"}},
-  {label:"Tue", date:"Day 2", slots:{Breakfast:"bf1", Lunch:"la", Dinner:"da", "Snack 1":"s6", "Snack 2":"s5"}},
-  {label:"Wed", date:"Day 3", note:"🛒🔥 Batch #2", slots:{Breakfast:"bf3", Lunch:"la", Dinner:"lb", "Snack 1":"s3", "Snack 2":"s6"}},
-  {label:"Thu", date:"Day 4", slots:{Breakfast:"bf2", Lunch:"lb", Dinner:"de", "Snack 1":"s1", "Snack 2":"s6"}},
-  {label:"Fri", date:"Day 5", slots:{Breakfast:"bf1", Lunch:"lb", Dinner:"db", "Snack 1":"s3", "Snack 2":"s4"}},
-  {label:"Sat", date:"Day 6", slots:{Breakfast:"bf3", Lunch:"lb", Dinner:"dc", "Snack 1":"s1", "Snack 2":"s2"}},
-  {label:"Sun", date:"Day 7", note:"🛒🔥 Batch #1", slots:{Breakfast:"bf1", Lunch:"EATING_OUT", Dinner:"da", "Snack 1":"s3", "Snack 2":"s4"}},
+  {label:"Mon", date:"Day 1", slots:{Breakfast:"bf1", Lunch:"la", Dinner:"da", "Snack 1":"s1", "Snack 2":"s3"}},
+  {label:"Tue", date:"Day 2", slots:{Breakfast:"bf2", Lunch:"la", Dinner:"da", "Snack 1":"s2", "Snack 2":"s4"}},
+  {label:"Wed", date:"Day 3", note:"🛒🔥 Batch #2", slots:{Breakfast:"bf3", Lunch:"la", Dinner:"da", "Snack 1":"s1", "Snack 2":"s5"}},
+  {label:"Thu", date:"Day 4", slots:{Breakfast:"bf1", Lunch:"lb", Dinner:"de", "Snack 1":"s3", "Snack 2":"s4"}},
+  {label:"Fri", date:"Day 5", slots:{Breakfast:"bf2", Lunch:"lb", Dinner:"db", "Snack 1":"s1", "Snack 2":"s2"}},
+  {label:"Sat", date:"Day 6", slots:{Breakfast:"bf3", Lunch:"lb", Dinner:"dc", "Snack 1":"s3", "Snack 2":"s5"}},
+  {label:"Sun", date:"Day 7", note:"🛒🔥 Batch #1", slots:{Breakfast:"bf1", Lunch:"lb", Dinner:"dd", "Snack 1":"s1", "Snack 2":"s4"}},
 ];
 
 const PANTRY = {
-  "Grains, Pasta & Baking":[["Brown rice","6–7 lb (2 bags)"],["Rolled oats","1 container"],["Brami protein pasta","1 box"],["Stone-mill wheat bread","1 loaf"]],
-  "Nuts, Seeds & Fats":[["Chia seeds","2 bags"],["Raw almonds","8 oz"],["Almond butter","1 jar"],["Olive oil","—"],["Toasted sesame oil","1 small bottle (Week 4)"],["Sesame seeds","1 small bag (Week 4)"],["Grass-fed butter","1 stick"],["Avocado oil","1 bottle"],["Almond flour","1 bag (Week 2)"]],
-  "Other":[["Protein powder","2–3 tubs"],["Monk fruit sweetener","—"],["Garlic powder","1 jar"],["Paprika","1 jar"],["Smoked paprika","1 jar"],["Dried thyme","1 jar"],["Dried oregano","1 jar"],["Ground cumin","1 jar"],["Chili powder","1 jar"],["Ground ginger","1 jar"],["Balsamic vinegar","—"],["Low-sodium tamari or coconut aminos","1 bottle"],["Gochujang","1 tub (Week 4)"],["White miso paste","1 small tub (Week 4)"],["Rice vinegar","1 bottle (Week 4)"],["Maple syrup","1 small bottle (Week 4)"],["Chili crunch","1 jar (Week 4)"],["Curry powder","1 jar (Week 4)"],["Light coconut milk","2 (13.5oz) cans (Week 4)"],["Arrowroot starch","1 small bag (Week 1)"]],
+  "Grains, Pasta & Baking":[["Brown rice","7–8 lb (2–3 bags)"],["Rolled oats","1 container"],["Brami protein pasta","1 box"],["Stone-mill wheat bread","1 loaf"]],
+  "Canned & Broth":[["Diced tomatoes, no added sugar (14.5 oz)","4 cans (1/week, for beef skillet)"],["Diced tomatoes, no added sugar (28 oz)","4 cans (1/week, for turkey chili)"],["Chicken or vegetable broth","2 (32 oz) cartons (2 cups/week, for turkey chili)"]],
+  "Nuts, Seeds & Fats":[["Chia seeds","1 bag"],["Raw almonds","12 oz"],["Almond butter","1 jar"],["Olive oil","—"],["Toasted sesame oil","1 small bottle (Week 4)"],["Sesame seeds","1 small bag (Week 4)"],["Grass-fed butter","1 stick"]],
+  "Other":[["Protein powder","1 tub"],["Monk fruit sweetener","—"],["Garlic powder","1 jar"],["Paprika","1 jar"],["Smoked paprika","1 jar"],["Dried thyme","1 jar"],["Dried oregano","1 jar"],["Ground cumin","1 jar"],["Chili powder","1 jar"],["Ground ginger","1 jar"],["Balsamic vinegar","—"],["Low-sodium tamari or coconut aminos","1 bottle (Week 4)"]],
 };
 
 const week1 = {
@@ -327,53 +320,56 @@ const week1 = {
   blurb:"The baseline rotation — herb-roasted chicken, beef & rice, and turkey chili.",
   recipes:{
     bf1:{name:"Egg & Veggie Scramble + Avocado Toast", tag:"fresh", macroKey:"eggBF",
-      ing:["Pasture eggs — 2 (her) / 3 (him)","Liquid egg whites — ¼ cup (her) / ⅓ cup (him)","Diced bell pepper & spinach — ½ cup (her) / 1 cup (him)","Grass-fed butter — 1 tsp","Stone-mill wheat toast — 1 slice (her) / 2 (him)","Avocado — ¼ (her) / ½ (him)"],
-      method:"Sauté veggies in butter 3 min, add whole eggs + whites together, scramble. Serve with toast + avocado."},
-    bf2:{name:"Overnight Protein Oats with Berries & Chia", tag:"batch", cooked:"Jarred the night before, during batch prep", macroKey:"oatsBF",
-      ing:["Dry oats — ⅓ cup (her) / ⅔ cup (him)","A2 milk — ½ cup (her) / 1 cup (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ⅓ cup (her) / ¾ cup (him)","Chia seeds — 1.5 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"],
-      method:"Jarred at the end of Sunday and Wednesday batch prep for the next morning. Per jar: stir oats, milk, protein powder and chia together, top with berries, lid on, fridge overnight. Eat cold straight from the jar — nothing to cook."},
+      ing:["Pasture eggs — 2 (her) / 3 (him)","Diced bell pepper & spinach — ½ cup (her) / 1 cup (him)","Grass-fed butter — 1 tsp","Stone-mill wheat toast — 1 slice (her) / 2 (him)","Avocado — ¼ (her) / ½ (him)"],
+      method:"Sauté veggies in butter 3 min, add eggs, scramble. Serve with toast + avocado."},
+    bf2:{name:"Protein Oatmeal with Berries & Chia", tag:"fresh", macroKey:"oatsBF",
+      ing:["Dry oats — ½ cup (her) / ¾ cup (him)","A2 milk — ¼ cup (her) / ½ cup (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"],
+      method:"Cook oats in milk + water, stir in protein powder off-heat, top with berries + chia."},
     bf3:{name:"Kefir Berry Protein Smoothie", tag:"fresh", macroKey:"smoothieBF",
-      ing:["Plain kefir — 1 cup (her) / 2 cups (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — 1 cup (her) / 1.5 cups (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Banana — ½ (him only)","Ice"],
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — 1 cup (her) / 1.5 cups (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Banana — ½ (him only)","Ice"],
       method:"Blend everything until smooth."},
     la:{name:"Herb-Roasted Chicken Thigh Bowl", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"chickenLunch",
-      ing:["Chicken thighs — 5 oz (her) / 8 oz (him)","Sweet potato — ½ cup (her) / 1.5 cups (him)","Broccoli — 1.5 cups (her) / 2 cups (him)","Olive oil — 3 tbsp","Garlic powder — 2 tsp","Paprika — 2 tsp","Dried thyme — 1½ tsp","Salt & pepper — to taste"],
-      method:"Batch: 2.5 lbs chicken thighs + 2 lbs sweet potato + 2.25 lbs broccoli, tossed in oil/spices, roasted 425°F 25–30 min. Makes 3 servings each — covers Mon–Wed lunches."},
+      ing:["Chicken thighs — 5 oz (her) / 8 oz (him)","Sweet potato — 1 cup (her) / 1.5 cups (him)","Broccoli — 1 cup (her) / 1.5 cups (him)","Olive oil — 3 tbsp","Garlic powder — 2 tsp","Paprika — 2 tsp","Dried thyme — 1½ tsp","Salt & pepper — to taste"],
+      method:"Batch: 2.5 lbs chicken thighs + 2.5 lbs sweet potato + 1.75 lbs broccoli, tossed in oil/spices, roasted 425°F 25–30 min. Makes 3 servings each — covers Mon–Wed lunches."},
     da:{name:"Grass-Fed Beef & Rice Skillet", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"beefDinner",
-      ing:["Grass-fed ground beef, 93% lean — 3 lbs","Bell peppers — 3, diced","Onion — 1, diced","Diced tomatoes, no added sugar — 1 (14.5 oz) can","Cooked brown rice — 4 cups (from about 1⅓ cups dry rice, cooked separately)","Olive oil — 2 tbsp (93% lean needs it to brown)","Avocado — ¼ (her) / ½ (him) per meal","Garlic powder — 2 tsp","Paprika — 1 tsp","Salt & pepper — to taste","To serve: about 1½ cups of the finished mixture (her) / 2½ cups (him) per meal, topped with the avocado — batch makes 3 servings each, dinner tonight through Tuesday"],
-      method:"Batch: brown 3 lbs 93% lean grass-fed ground beef in 2 tbsp olive oil with 3 diced bell peppers, 1 diced onion, 2 tsp garlic powder, 1 tsp paprika, and salt & pepper to taste. Stir in 1 (14.5oz) can diced tomatoes, fold in 4 cups cooked rice. Top each bowl with avocado. Makes 3 servings each — covers Mon–Wed dinners."},
+      ing:["Grass-fed ground beef — 2 lbs","Bell peppers — 2, diced","Onion — 1, diced","Diced tomatoes, no added sugar — 1 (14.5 oz) can","Cooked brown rice — 4 cups (from about 1⅓ cups dry rice, cooked separately)","Garlic powder — 2 tsp","Paprika — 1 tsp","Salt & pepper — to taste","To serve: about 1¼ cups of the finished mixture (her) / 2 cups (him) per meal — batch makes 3 servings each"],
+      method:"Batch: brown 2 lbs grass-fed ground beef with 2 diced bell peppers, 1 diced onion, 2 tsp garlic powder, 1 tsp paprika, and salt & pepper to taste. Stir in 1 (14.5oz) can diced tomatoes, fold in 4 cups cooked rice. Makes 3 servings each — covers Mon–Wed dinners."},
     lb:{name:"Ground Turkey Sweet Potato Chili", tag:"batch", cooked:"Batch-cooked Wednesday", macroKey:"turkeyLunch",
-      ing:["Ground turkey (93% lean) — 3.5 lbs","Onion — 1, diced","Bell peppers — 2, diced","Diced tomatoes, no added sugar — 1 (28 oz) can","Sweet potato — 3 lbs, diced","Chicken or vegetable broth — 2.5 cups","Chili powder — 2 tbsp","Ground cumin — 1 tbsp","Garlic powder — 1 tbsp","Salt & pepper — to taste","Brown rice — cook 2 cups dry (yields about 6 cups cooked) alongside the batch, portioned separately, not simmered into the chili — ¼ cup (her) / 1¼ cups (him) per meal","Avocado — ¼ (her) / ½ (him) per meal","To serve: about 1½ cups of chili (her) / 2½ cups (him) per meal — batch makes 4 servings each, dinner tonight (Wednesday) through Saturday lunch"],
-      method:"Batch: brown 3.5 lbs ground turkey with 1 diced onion & 2 diced bell peppers, add 1 (28oz) can diced tomatoes, 3 lbs diced sweet potato, 2.5 cups broth, 2 tbsp chili powder, 1 tbsp ground cumin, 1 tbsp garlic powder, and salt & pepper to taste. Simmer 25 min until sweet potato is tender. While it simmers, cook 2 cups dry brown rice separately (about 6 cups cooked) to portion alongside all 4 servings each. Dinner tonight (Wednesday), then lunches Thursday through Saturday."},
+      ing:["Ground turkey (93% lean) — 3 lbs","Onion — 1, diced","Bell peppers — 2, diced","Diced tomatoes, no added sugar — 1 (28 oz) can","Sweet potato — 2.5 lbs, diced","Chicken or vegetable broth — 2 cups","Chili powder — 2 tbsp","Ground cumin — 1 tbsp","Garlic powder — 1 tbsp","Salt & pepper — to taste","Brown rice — cook 2 cups dry (yields about 6 cups cooked) alongside the batch, portioned separately, not simmered into the chili — ½ cup (her) / 1 cup (him) per meal","Avocado — ¼ (her) / ½ (him) per meal","To serve: about 1 bowl of chili (her) / 1½ bowls (him) per meal — batch makes 4 servings each"],
+      method:"Batch: brown 3 lbs ground turkey with 1 diced onion & 2 diced bell peppers, add 1 (28oz) can diced tomatoes, 2.5 lbs diced sweet potato, 2 cups broth, 2 tbsp chili powder, 1 tbsp ground cumin, 1 tbsp garlic powder, and salt & pepper to taste. Simmer 25 min until sweet potato is tender. While it simmers, cook 2 cups dry brown rice separately (about 6 cups cooked) to portion alongside all 4 servings each. Covers Thu–Sun lunches."},
     de:{name:"Turkey Taco Skillet with Rice & Peppers", tag:"fresh", macroKey:"turkeyFreshDinner",
-      ing:["Ground turkey — 4 oz (her) / 7 oz (him)","Cooked rice — ½ cup (her) / 1.25 cups (him)","Bell pepper & onion, diced — ½ cup (her) / 1 cup (him)","Shredded cheese — 1 oz (her) / 1.5 oz (him)","Olive oil — 1 tbsp","Ground cumin — 1 tsp","Chili powder — 1 tsp","Salt & pepper — to taste"],
+      ing:["Ground turkey — 4 oz (her) / 7 oz (him)","Cooked rice — ¾ cup (her) / 1.25 cups (him)","Bell pepper & onion, diced — ½ cup (her) / 1 cup (him)","Shredded cheese — 1 oz (her) / 1.5 oz (him)","Olive oil — 1 tbsp","Ground cumin — 1 tsp","Chili powder — 1 tsp","Salt & pepper — to taste"],
       method:"Quick weeknight skillet (~20 min): brown turkey with peppers/onion and spices, stir through rice, top with cheese. Cooked fresh Thursday."},
-    dc:{name:"Caprese Salad with Brami Pasta & Chicken", tag:"fresh", macroKey:"capreseDinner",
-      ing:["Brami protein pasta — 1.5 oz dry (her) / 3 oz (him)","Cooked chicken, sliced — 3 oz (her) / 6 oz (him)","Cherry tomatoes, halved — 1 cup (her) / 1.5 cups (him)","Fresh mozzarella, torn — 1 oz (her) / 2 oz (him)","Fresh basil — ¼ cup, torn","Olive oil — 2 tbsp","Balsamic vinegar — 1 tbsp","Salt & pepper — to taste"],
-      method:"Cook the Brami pasta per package, drain and cool slightly. Toss with the sliced chicken, cherry tomatoes, mozzarella and basil. Finish with olive oil and balsamic, salt and pepper to taste."},
     db:{name:"Baked Salmon, Potato & Asparagus", tag:"fresh", macroKey:"salmonDinner",
-      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Diced potato — ½ cup (her) / 2 cups (him)","Asparagus — 1.5 cups (her) / 1.5 cups (him)","Olive oil — 1 tbsp","Lemon — ½","Salt & pepper — to taste"],
+      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Diced potato — ¾ cup (her) / 1.5 cups (him)","Asparagus — 1 cup (her) / 1.5 cups (him)","Olive oil — 1 tbsp","Lemon — ½","Salt & pepper — to taste"],
+      method:"Roast veg at 425°F 20 min, add salmon for the final 12–15 min until it flakes."},
+    dc:{name:"Caprese Salad with Brami Pasta & Chicken", tag:"fresh", macroKey:"capreseDinner",
+      ing:["Brami protein pasta — 1.5 oz dry (her) / 3 oz (him)","Cooked chicken, sliced — 3 oz (her) / 6 oz (him)","Cherry tomatoes — 1 cup (her) / 1.5 cups (him)","Fresh mozzarella — 1 oz (her) / 2 oz (him)","Fresh basil — ¼ cup, torn","Olive oil — 2 tbsp","Balsamic vinegar — 1 tbsp","Salt & pepper — to taste"],
+      method:"Cook pasta per package, cool. Toss with tomatoes, torn mozzarella, basil, oil + balsamic. Top with sliced chicken."},
+    dd:{name:"Baked Salmon, Sweet Potato & Green Beans", tag:"fresh", macroKey:"salmonDinner",
+      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Sweet potato — ¾ cup (her) / 1.5 cups (him)","Green beans — 1 cup (her) / 1.5 cups (him)","Olive oil — 1 tbsp","Lemon — ½","Salt & pepper — to taste"],
       method:"Roast veg at 425°F 20 min, add salmon for the final 12–15 min until it flakes."},
     s1:{name:"Greek Yogurt, Berries & Chia", tag:"fresh", macroKey:"s1",
-      ing:["Plain fat-free Greek yogurt — 1 cup (her) / 1.25 cups (him)","Mixed berries — ½ cup (her) / ¾ cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"], method:"Stir together."},
+      ing:["Plain fat-free Greek yogurt — 1 cup (her) / 1.5 cups (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"], method:"Stir together."},
     s2:{name:"Apple + Almond Butter", tag:"fresh", macroKey:"s2",
-      ing:["Apple — 1","Almond butter — 1.5 tbsp (her) / 2 tbsp (him)"], method:"Slice and dip."},
+      ing:["Apple — 1","Almond butter — 1 tbsp (her) / 2 tbsp (him)"], method:"Slice and dip."},
     s3:{name:"Protein Shake", tag:"fresh", macroKey:"s3",
-      ing:["Protein powder — 1 scoop","A2 milk — ½ cup + ½ cup water (her) / ¾ cup (him)","Banana — ½"], method:"Blend or shake."},
+      ing:["Protein powder — 1 scoop","A2 milk — 1 cup","Banana — ½ (her) / 1 (him)"], method:"Blend or shake."},
     s4:{name:"Kefir + Almonds", tag:"fresh", macroKey:"s4",
-      ing:["Plain kefir — ¾ cup (her) / 1.25 cups (him)","Protein powder — ½ scoop","Raw almonds — ½ oz (her) / ½ oz (him)"], method:"Whisk the protein powder into the kefir, almonds alongside."},
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Raw almonds — 1 oz (her) / 1.5 oz (him)"], method:"Pour and portion."},
     s5:{name:"Orange + Hard-Boiled Eggs", tag:"fresh", macroKey:"s5",
       ing:["Orange — 1","Pasture eggs, hard-boiled — 2 (her) / 3 (him)"], method:"Peel and go."},
-    s6:{name:"Protein Chia Pudding", tag:"batch", cooked:"Jarred during Sunday and Wednesday batch prep", macroKey:"s6",
-      ing:["Chia seeds — 1.5 tbsp","A2 milk — ½ cup","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ¼ cup (her) / ⅓ cup (him)","Monk fruit, to taste"],
-      method:"Jarred during batch prep — whisk the chia, milk and protein powder together, top with berries, lid on, fridge at least 3 hours or overnight. Keeps well 4–5 days, so one session's jars last until the next batch day."},
+  },
+  weekly:{
+    "Weekly Basics (buy once)":[["Pasture-raised eggs","2.5 dozen"],["Plain fat-free Greek yogurt","2 (32oz) tubs"],["Kefir, plain","4 (32oz) bottles"],["A2 grass-fed milk","2 quarts"],["Mixed berries, frozen","6 lbs"]],
   },
   trip1:{
-    "Proteins & Dairy":[["Pasture-raised eggs","2.5 dozen"],["Liquid egg whites","2 (16oz) cartons"],["Plain fat-free Greek yogurt","3 (32oz) tubs"],["Kefir, plain","4 (32oz) bottles"],["A2 grass-fed milk","¾ gallon (1 qt + ½ gal)"],["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef, 93% lean","3 lbs"]],
-    "Produce":[["Mixed berries, frozen","6 lbs"],["Sweet potatoes","2 lbs"],["Broccoli","2.25 lbs"],["Bell peppers","4"],["Onion","1"],["Diced tomatoes, no added sugar","1 (14.5 oz) can"],["Avocado","4"],["Apple","2"],["Orange","2"],["Banana","1"],["Spinach or mixed greens","1 small bag"],["Garlic","as needed"]],
+    "Proteins & Dairy":[["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef","2 lbs"]],
+    "Produce":[["Sweet potatoes","2.5 lbs"],["Broccoli","1.75 lbs"],["Bell peppers","2"],["Onion","1"],["Avocado","1"],["Apple","2"],["Orange","2"],["Banana","2"],["Spinach or mixed greens","1 small bag"],["Garlic","as needed"]],
   },
   trip2:{
-    "Proteins & Dairy":[["Ground turkey, 93% lean","4 lbs"],["Chicken breast/thigh (for caprese)","¾ lb"],["Salmon fillets","1 lb"],["Fresh mozzarella","3 oz"],["Shredded cheese","2.5 oz"]],
-    "Produce":[["Sweet potatoes","3.5 lbs"],["Bell peppers","4"],["Onion","2"],["Diced tomatoes, no added sugar","1 (28 oz) can"],["Chicken or vegetable broth","1 (32oz) carton"],["Cherry tomatoes","1 pint"],["Potatoes, regular","1.5 lbs"],["Asparagus","1 lb"],["Avocados","4"],["Apple","2"],["Orange","2"],["Banana","1"],["Fresh basil","1 bunch"],["Lemon","2"],["Garlic","as needed"]],
+    "Proteins & Dairy":[["Ground turkey, 93% lean","3.5 lbs"],["Chicken breast/thigh (for caprese)","¾ lb"],["Salmon fillets","2 lbs"],["Fresh mozzarella","3 oz"],["Shredded cheese","2.5 oz"]],
+    "Produce":[["Sweet potatoes","3.5 lbs"],["Bell peppers","4"],["Onion","1"],["Cherry tomatoes","1 pint"],["Potatoes, regular","1 lb"],["Asparagus","¾ lb"],["Green beans","¾ lb"],["Avocados","4"],["Apple","2"],["Orange","2"],["Banana","3"],["Fresh basil","1 bunch"],["Lemon","2"],["Garlic","as needed"]],
   },
 };
 
@@ -382,53 +378,56 @@ const week2 = {
   blurb:"Lemon, oregano, tomato & zucchini in place of the herb/chili flavors — same portions, same targets.",
   recipes:{
     bf1:{name:"Tomato & Spinach Egg Scramble + Avocado Toast", tag:"fresh", macroKey:"eggBF",
-      ing:["Pasture eggs — 2 (her) / 3 (him)","Liquid egg whites — ¼ cup (her) / ⅓ cup (him)","Diced tomato & spinach — ½ cup (her) / 1 cup (him)","Grass-fed butter — 1 tsp","Stone-mill wheat toast — 1 slice (her) / 2 (him)","Avocado — ¼ (her) / ½ (him)"],
-      method:"Sauté veggies in butter 3 min, add whole eggs + whites together, scramble. Serve with toast + avocado."},
-    bf2:{name:"Overnight Protein Oats with Berries & Chia", tag:"batch", cooked:"Jarred the night before, during batch prep", macroKey:"oatsBF",
-      ing:["Dry oats — ⅓ cup (her) / ⅔ cup (him)","A2 milk — ½ cup (her) / 1 cup (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ⅓ cup (her) / ¾ cup (him)","Chia seeds — 1.5 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"],
-      method:"Jarred at the end of Sunday and Wednesday batch prep for the next morning. Per jar: stir oats, milk, protein powder and chia together, top with berries, lid on, fridge overnight. Eat cold straight from the jar — nothing to cook."},
+      ing:["Pasture eggs — 2 (her) / 3 (him)","Diced tomato & spinach — ½ cup (her) / 1 cup (him)","Grass-fed butter — 1 tsp","Stone-mill wheat toast — 1 slice (her) / 2 (him)","Avocado — ¼ (her) / ½ (him)"],
+      method:"Sauté veggies in butter 3 min, add eggs, scramble. Serve with toast + avocado."},
+    bf2:{name:"Protein Oatmeal with Berries & Chia", tag:"fresh", macroKey:"oatsBF",
+      ing:["Dry oats — ½ cup (her) / ¾ cup (him)","A2 milk — ¼ cup (her) / ½ cup (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"],
+      method:"Cook oats in milk + water, stir in protein powder off-heat, top with berries + chia."},
     bf3:{name:"Kefir Berry Protein Smoothie", tag:"fresh", macroKey:"smoothieBF",
-      ing:["Plain kefir — 1 cup (her) / 2 cups (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — 1 cup (her) / 1.5 cups (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Banana — ½ (him only)","Ice"],
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — 1 cup (her) / 1.5 cups (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Banana — ½ (him only)","Ice"],
       method:"Blend everything until smooth."},
-    la:{name:"Greek Chicken Meatball & Rice Bowl", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"chickenLunch",
-      ing:["Ground chicken — 2.5 lbs","Egg — 1","Almond flour — ½ cup","Dried oregano — 1 tbsp","Garlic — 4 cloves, minced","Lemon — 1, zested and juiced","Zucchini — 1.5 lbs, in half-moons","Cherry tomatoes — 1 pint","Olive oil — 2 tbsp","Feta — 4 oz, crumbled","Salt & pepper — to taste","Brown rice — cook 1⅓ cups dry (about 4 cups cooked) alongside the batch, portioned separately — ⅓ cup (her) / 1 cup (him) per meal","To serve: about 6 meatballs (her) / 9 (him) with the roasted veg per meal — batch makes 3 servings each"],
-      method:"Batch: mix 2.5 lbs ground chicken with 1 egg, ½ cup almond flour, 1 tbsp dried oregano, 4 cloves minced garlic, the zest of 1 lemon, and salt & pepper to taste. Roll into about 45 meatballs and bake 400°F 18–20 min. Toss 1.5 lbs zucchini and 1 pint cherry tomatoes in 2 tbsp olive oil and roast alongside, 20 min. Cook 1⅓ cups dry rice separately. Finish with the lemon juice and 4 oz crumbled feta. Makes 3 servings each — covers Mon–Wed lunches."},
+    la:{name:"Lemon-Oregano Chicken Thigh Bowl with Green Beans", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"chickenLunch",
+      ing:["Chicken thighs — 5 oz (her) / 8 oz (him)","Sweet potato — 1 cup (her) / 1.5 cups (him)","Green beans — 1 cup (her) / 1.5 cups (him)","Olive oil — 3 tbsp","Lemon — 1","Dried oregano — 2 tsp","Garlic — 3 cloves, minced","Salt & pepper — to taste"],
+      method:"Batch: 2.5 lbs chicken thighs + 2.5 lbs sweet potato + 1.75 lbs green beans, tossed in oil/lemon/oregano, roasted 425°F 25–30 min. Covers Mon–Wed lunches."},
     da:{name:"Beef & Rice Skillet with Zucchini & Tomato", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"beefDinner",
-      ing:["Grass-fed ground beef, 93% lean — 3 lbs","Zucchini — 3 cups, diced","Onion — 1, diced","Diced tomatoes, no added sugar — 1 (14.5 oz) can","Cooked brown rice — 4 cups (from about 1⅓ cups dry rice, cooked separately)","Olive oil — 2 tbsp (93% lean needs it to brown)","Avocado — ¼ (her) / ½ (him) per meal","Dried oregano — 2 tsp","Garlic — 3 cloves, minced","Salt & pepper — to taste","To serve: about 1½ cups of the finished mixture (her) / 2½ cups (him) per meal, topped with the avocado — batch makes 3 servings each, dinner tonight through Tuesday"],
-      method:"Batch: brown 3 lbs 93% lean grass-fed ground beef in 2 tbsp olive oil with 3 cups diced zucchini, 1 diced onion, 1 (14.5oz) can diced tomato, 2 tsp dried oregano, 3 cloves minced garlic, and salt & pepper to taste. Fold in 4 cups cooked rice. Top each bowl with avocado. Covers Mon–Wed dinners."},
+      ing:["Grass-fed ground beef — 2 lbs","Zucchini — 2 cups, diced","Onion — 1, diced","Diced tomatoes, no added sugar — 1 (14.5 oz) can","Cooked brown rice — 4 cups (from about 1⅓ cups dry rice, cooked separately)","Dried oregano — 2 tsp","Garlic — 3 cloves, minced","Salt & pepper — to taste","To serve: about 1¼ cups of the finished mixture (her) / 2 cups (him) per meal — batch makes 3 servings each"],
+      method:"Batch: brown 2 lbs grass-fed ground beef with 2 cups diced zucchini, 1 diced onion, 1 (14.5oz) can diced tomato, 2 tsp dried oregano, 3 cloves minced garlic, and salt & pepper to taste. Fold in 4 cups cooked rice. Covers Mon–Wed dinners."},
     lb:{name:"Mediterranean Turkey & Sweet Potato Skillet", tag:"batch", cooked:"Batch-cooked Wednesday", macroKey:"turkeyLunch",
-      ing:["Ground turkey (93% lean) — 3.5 lbs","Onion — 1, diced","Bell peppers — 2, diced","Diced tomatoes, no added sugar — 1 (28 oz) can","Sweet potato — 3 lbs, diced","Chicken or vegetable broth — 2.5 cups","Dried oregano — 2 tbsp","Lemon — 1, juiced","Garlic — 3 cloves, minced","Salt & pepper — to taste","Brown rice — cook 2 cups dry (yields about 6 cups cooked) alongside the batch, portioned separately, not simmered into the chili — ¼ cup (her) / 1¼ cups (him) per meal","Avocado — ¼ (her) / ½ (him) per meal","To serve: about 1½ cups (her) / 2½ cups (him) per meal — batch makes 4 servings each, dinner tonight (Wednesday) through Saturday lunch"],
-      method:"Batch: brown 3.5 lbs ground turkey with 1 diced onion, 2 diced bell peppers, 1 (28oz) can diced tomato, 2 tbsp dried oregano, juice of 1 lemon, and 3 cloves minced garlic. Simmer with 3 lbs diced sweet potato + 2.5 cups broth for 25 min. While it simmers, cook 2 cups dry brown rice separately (about 6 cups cooked) to portion alongside all 4 servings each. Dinner tonight (Wednesday), then lunches Thursday through Saturday."},
+      ing:["Ground turkey (93% lean) — 3 lbs","Onion — 1, diced","Bell peppers — 2, diced","Diced tomatoes, no added sugar — 1 (28 oz) can","Sweet potato — 2.5 lbs, diced","Chicken or vegetable broth — 2 cups","Dried oregano — 2 tbsp","Lemon — 1, juiced","Garlic — 3 cloves, minced","Salt & pepper — to taste","Brown rice — cook 2 cups dry (yields about 6 cups cooked) alongside the batch, portioned separately, not simmered into the chili — ½ cup (her) / 1 cup (him) per meal","Avocado — ¼ (her) / ½ (him) per meal","To serve: about 1 bowl (her) / 1½ bowls (him) per meal — batch makes 4 servings each"],
+      method:"Batch: brown 3 lbs ground turkey with 1 diced onion, 2 diced bell peppers, 1 (28oz) can diced tomato, 2 tbsp dried oregano, juice of 1 lemon, and 3 cloves minced garlic. Simmer with 2.5 lbs diced sweet potato + 2 cups broth for 25 min. While it simmers, cook 2 cups dry brown rice separately (about 6 cups cooked) to portion alongside all 4 servings each. Covers Thu–Sun lunches."},
     de:{name:"Lemon-Oregano Turkey Skillet with Rice & Zucchini", tag:"fresh", macroKey:"turkeyFreshDinner",
-      ing:["Ground turkey — 4 oz (her) / 7 oz (him)","Cooked rice — ½ cup (her) / 1.25 cups (him)","Zucchini, diced — ½ cup (her) / 1 cup (him)","Shredded cheese — 1 oz (her) / 1.5 oz (him)","Olive oil — 1 tbsp","Lemon — ½","Dried oregano — 1 tsp","Salt & pepper — to taste"],
+      ing:["Ground turkey — 4 oz (her) / 7 oz (him)","Cooked rice — ¾ cup (her) / 1.25 cups (him)","Zucchini, diced — ½ cup (her) / 1 cup (him)","Shredded cheese — 1 oz (her) / 1.5 oz (him)","Olive oil — 1 tbsp","Lemon — ½","Dried oregano — 1 tsp","Salt & pepper — to taste"],
       method:"Quick weeknight skillet (~20 min): brown turkey with zucchini, lemon & oregano, stir through rice, top with cheese. Cooked fresh Thursday."},
-    dc:{name:"Greek Chicken & Brami Pasta Salad", tag:"fresh", macroKey:"capreseDinner",
-      ing:["Brami protein pasta — 1.5 oz dry (her) / 3 oz (him)","Cooked chicken, sliced — 3 oz (her) / 6 oz (him)","Cucumber & cherry tomato, chopped — 1 cup (her) / 1.5 cups (him)","Feta, crumbled — 1 oz (her) / 2 oz (him)","Red onion, thinly sliced — ¼ cup","Dried oregano — 1 tsp","Olive oil — 2 tbsp","Lemon — 1","Salt & pepper — to taste"],
-      method:"Cook the Brami pasta per package, drain and cool slightly. Toss with the sliced chicken, cucumber, cherry tomato, feta and red onion. Dress with olive oil, the juice of the lemon, and oregano."},
     db:{name:"Pan-Seared Salmon with Zucchini & Potato", tag:"fresh", macroKey:"salmonDinner",
-      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Diced potato — ½ cup (her) / 2 cups (him)","Zucchini — 1.5 cups (her) / 1.5 cups (him)","Olive oil — 1 tbsp","Lemon — ½","Garlic — 2 cloves, minced","Salt & pepper — to taste"],
+      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Diced potato — ¾ cup (her) / 1.5 cups (him)","Zucchini — 1 cup (her) / 1.5 cups (him)","Olive oil — 1 tbsp","Lemon — ½","Garlic — 2 cloves, minced","Salt & pepper — to taste"],
       method:"Roast potato & zucchini at 425°F 20 min. Pan-sear salmon skin-down 4 min, flip 3 min, finish with lemon & garlic."},
+    dc:{name:"Greek Chicken & Brami Pasta Salad", tag:"fresh", macroKey:"capreseDinner",
+      ing:["Brami protein pasta — 1.5 oz dry (her) / 3 oz (him)","Cooked chicken, sliced — 3 oz (her) / 6 oz (him)","Cucumber & cherry tomato — 1 cup (her) / 1.5 cups (him)","Feta or mozzarella — 1 oz (her) / 2 oz (him)","Red onion — ¼ cup, thinly sliced","Dried oregano — 1 tsp","Olive oil — 2 tbsp","Lemon — 1","Salt & pepper — to taste"],
+      method:"Cook pasta per package, cool. Toss with cucumber, tomato, red onion, cheese, oregano, olive oil + lemon. Top with sliced chicken."},
+    dd:{name:"Lemon-Oregano Baked Tilapia with Sweet Potato & Asparagus", tag:"fresh", macroKey:"tilapiaDinner",
+      ing:["Tilapia fillet — 5 oz (her) / 7 oz (him)","Sweet potato — ¾ cup (her) / 1 cup (him)","Asparagus — 1 cup (her) / 1.5 cups (him)","Olive oil — 1 tbsp","Lemon — ½","Dried oregano — 1 tsp","Garlic — 2 cloves, minced","Salt & pepper — to taste"],
+      method:"Roast veg at 425°F 20 min, add tilapia (lemon-oregano rub) for the final 10 min until it flakes."},
     s1:{name:"Greek Yogurt, Berries & Chia", tag:"fresh", macroKey:"s1",
-      ing:["Plain fat-free Greek yogurt — 1 cup (her) / 1.25 cups (him)","Mixed berries — ½ cup (her) / ¾ cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"], method:"Stir together."},
+      ing:["Plain fat-free Greek yogurt — 1 cup (her) / 1.5 cups (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"], method:"Stir together."},
     s2:{name:"Apple + Almond Butter", tag:"fresh", macroKey:"s2",
-      ing:["Apple — 1","Almond butter — 1.5 tbsp (her) / 2 tbsp (him)"], method:"Slice and dip."},
+      ing:["Apple — 1","Almond butter — 1 tbsp (her) / 2 tbsp (him)"], method:"Slice and dip."},
     s3:{name:"Protein Shake", tag:"fresh", macroKey:"s3",
-      ing:["Protein powder — 1 scoop","A2 milk — ½ cup + ½ cup water (her) / ¾ cup (him)","Banana — ½"], method:"Blend or shake."},
+      ing:["Protein powder — 1 scoop","A2 milk — 1 cup","Banana — ½ (her) / 1 (him)"], method:"Blend or shake."},
     s4:{name:"Kefir + Almonds", tag:"fresh", macroKey:"s4",
-      ing:["Plain kefir — ¾ cup (her) / 1.25 cups (him)","Protein powder — ½ scoop","Raw almonds — ½ oz (her) / ½ oz (him)"], method:"Whisk the protein powder into the kefir, almonds alongside."},
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Raw almonds — 1 oz (her) / 1.5 oz (him)"], method:"Pour and portion."},
     s5:{name:"Orange + Hard-Boiled Eggs", tag:"fresh", macroKey:"s5",
       ing:["Orange — 1","Pasture eggs, hard-boiled — 2 (her) / 3 (him)"], method:"Peel and go."},
-    s6:{name:"Protein Chia Pudding", tag:"batch", cooked:"Jarred during Sunday and Wednesday batch prep", macroKey:"s6",
-      ing:["Chia seeds — 1.5 tbsp","A2 milk — ½ cup","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ¼ cup (her) / ⅓ cup (him)","Monk fruit, to taste"],
-      method:"Jarred during batch prep — whisk the chia, milk and protein powder together, top with berries, lid on, fridge at least 3 hours or overnight. Keeps well 4–5 days, so one session's jars last until the next batch day."},
+  },
+  weekly:{
+    "Weekly Basics (buy once)":[["Pasture-raised eggs","2.5 dozen"],["Plain fat-free Greek yogurt","2 (32oz) tubs"],["Kefir, plain","4 (32oz) bottles"],["A2 grass-fed milk","2 quarts"],["Mixed berries, frozen","6 lbs"]],
   },
   trip1:{
-    "Proteins & Dairy":[["Pasture-raised eggs","2.5 dozen"],["Liquid egg whites","2 (16oz) cartons"],["Plain fat-free Greek yogurt","3 (32oz) tubs"],["Kefir, plain","4 (32oz) bottles"],["A2 grass-fed milk","¾ gallon (1 qt + ½ gal)"],["Ground chicken","2.5 lbs"],["Grass-fed ground beef, 93% lean","3 lbs"],["Feta","4 oz"]],
-    "Produce":[["Mixed berries, frozen","6 lbs"],["Zucchini","2.5 lbs"],["Cherry tomatoes","1 pint"],["Tomato, for scramble","2"],["Onion","1"],["Diced tomatoes, no added sugar","1 (14.5 oz) can"],["Avocado","3"],["Apple","2"],["Orange","2"],["Banana","2"],["Spinach or mixed greens","1 small bag"],["Lemon","2"],["Garlic","as needed"]],
+    "Proteins & Dairy":[["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef","2 lbs"]],
+    "Produce":[["Sweet potatoes","2.5 lbs"],["Green beans","1.75 lbs"],["Zucchini","1.5 lbs"],["Onion","1"],["Avocado","1"],["Apple","2"],["Orange","2"],["Banana","2"],["Spinach or mixed greens","1 small bag"],["Lemon","3"],["Garlic","as needed"]],
   },
   trip2:{
-    "Proteins & Dairy":[["Ground turkey, 93% lean","4 lbs"],["Chicken breast/thigh (for pasta salad)","¾ lb"],["Salmon fillets","1 lb"],["Feta or mozzarella","3 oz"],["Shredded cheese","1.5 oz"]],
-    "Produce":[["Sweet potatoes","3.5 lbs"],["Bell peppers","2"],["Zucchini","1.5 lbs"],["Onion + red onion","2"],["Diced tomatoes, no added sugar","1 (28 oz) can"],["Chicken or vegetable broth","1 (32oz) carton"],["Cucumber","1"],["Cherry tomatoes","1 pint"],["Potatoes, regular","1.5 lbs"],["Avocados","4"],["Apple","2"],["Orange","2"],["Banana","3"],["Lemon","3"],["Garlic","as needed"]],
+    "Proteins & Dairy":[["Ground turkey, 93% lean","3.5 lbs"],["Chicken breast/thigh (for pasta salad)","¾ lb"],["Salmon fillets","1 lb"],["Tilapia fillets","1 lb"],["Feta or mozzarella","3 oz"],["Shredded cheese","1.5 oz"]],
+    "Produce":[["Sweet potatoes","3.5 lbs"],["Bell peppers","2"],["Zucchini","1.5 lbs"],["Onion + red onion","2"],["Cucumber","1"],["Cherry tomatoes","1 pint"],["Potatoes, regular","1 lb"],["Asparagus","¾ lb"],["Avocados","4"],["Apple","2"],["Orange","2"],["Banana","3"],["Fresh basil","1 bunch"],["Lemon","4"],["Garlic","as needed"]],
   },
 };
 
@@ -437,53 +436,56 @@ const week3 = {
   blurb:"Chili-lime, smoked paprika & peppers throughout — same portions, same targets.",
   recipes:{
     bf1:{name:"Southwest Egg Scramble + Avocado Toast", tag:"fresh", macroKey:"eggBF",
-      ing:["Pasture eggs — 2 (her) / 3 (him)","Liquid egg whites — ¼ cup (her) / ⅓ cup (him)","Diced bell pepper & onion — ½ cup (her) / 1 cup (him)","Grass-fed butter — 1 tsp","Stone-mill wheat toast — 1 slice (her) / 2 (him)","Avocado — ¼ (her) / ½ (him)","Chili powder — ¼ tsp"],
-      method:"Sauté veggies + chili powder in butter 3 min, add whole eggs + whites together, scramble. Serve with toast + avocado."},
-    bf2:{name:"Overnight Cinnamon-Apple Protein Oats", tag:"batch", cooked:"Jarred the night before, during batch prep", macroKey:"oatsBF",
-      ing:["Dry oats — ⅓ cup (her) / ⅔ cup (him)","A2 milk — ½ cup (her) / 1 cup (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Diced apple — ⅓ cup (her) / ¾ cup (him)","Chia seeds — 1.5 tbsp (her) / 1.5 tbsp (him)","Cinnamon — ½ tsp, monk fruit sweetener — to taste"],
-      method:"Jarred at the end of Sunday and Wednesday batch prep for the next morning. Per jar: stir oats, milk, protein powder, chia and cinnamon together, fold in the diced apple, lid on, fridge overnight. Eat cold."},
-    bf3:{name:"Kefir Berry Protein Smoothie", tag:"fresh", macroKey:"smoothieBF",
-      ing:["Plain kefir — 1 cup (her) / 2 cups (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — 1 cup (her) / 1.5 cups (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Banana — ½ (him only)","Ice"],
+      ing:["Pasture eggs — 2 (her) / 3 (him)","Diced bell pepper & onion — ½ cup (her) / 1 cup (him)","Grass-fed butter — 1 tsp","Stone-mill wheat toast — 1 slice (her) / 2 (him)","Avocado — ¼ (her) / ½ (him)","Chili powder — ¼ tsp"],
+      method:"Sauté veggies + chili powder in butter 3 min, add eggs, scramble. Serve with toast + avocado."},
+    bf2:{name:"Cinnamon-Apple Protein Oatmeal", tag:"fresh", macroKey:"oatsBF",
+      ing:["Dry oats — ½ cup (her) / ¾ cup (him)","A2 milk — ¼ cup (her) / ½ cup (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Diced apple — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Cinnamon — ½ tsp, monk fruit sweetener — to taste"],
+      method:"Cook oats in milk + water, stir in protein powder off-heat, top with apple, chia & cinnamon."},
+    bf3:{name:"Banana-Cinnamon Kefir Protein Smoothie", tag:"fresh", macroKey:"smoothieBF",
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Banana — ½ (her) / 1 (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Cinnamon — ¼ tsp","Ice — 1 cup"],
       method:"Blend everything until smooth."},
     la:{name:"Chili-Lime Chicken Thigh Bowl with Peppers", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"chickenLunch",
-      ing:["Chicken thighs — 5 oz (her) / 8 oz (him)","Sweet potato — ½ cup (her) / 1.5 cups (him)","Bell peppers — 1.5 cups (her) / 2 cups (him)","Olive oil — 3 tbsp","Lime — 2","Chili powder — 2 tsp","Ground cumin — 2 tsp","Garlic — 3 cloves, minced","Salt & pepper — to taste"],
-      method:"Batch: 2.5 lbs chicken thighs + 2 lbs sweet potato + 2.25 lbs peppers, tossed in oil/lime/chili-cumin, roasted 425°F 25–30 min. Covers Mon–Wed lunches."},
+      ing:["Chicken thighs — 5 oz (her) / 8 oz (him)","Sweet potato — 1 cup (her) / 1.5 cups (him)","Bell peppers — 1 cup (her) / 1.5 cups (him)","Olive oil — 3 tbsp","Lime — 2","Chili powder — 2 tsp","Ground cumin — 2 tsp","Garlic — 3 cloves, minced","Salt & pepper — to taste"],
+      method:"Batch: 2.5 lbs chicken thighs + 2.5 lbs sweet potato + 1.75 lbs peppers, tossed in oil/lime/chili-cumin, roasted 425°F 25–30 min. Covers Mon–Wed lunches."},
     da:{name:"Southwest Beef & Rice Skillet with Peppers & Tomato", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"beefDinner",
-      ing:["Grass-fed ground beef, 93% lean — 3 lbs","Bell peppers — 3, diced","Onion — 1, diced","Diced tomatoes, no added sugar — 1 (14.5 oz) can","Cooked brown rice — 4 cups (from about 1⅓ cups dry rice, cooked separately)","Olive oil — 2 tbsp (93% lean needs it to brown)","Avocado — ¼ (her) / ½ (him) per meal","Smoked paprika — 2 tsp","Ground cumin — 1 tbsp","Salt & pepper — to taste","To serve: about 1½ cups of the finished mixture (her) / 2½ cups (him) per meal, topped with the avocado — batch makes 3 servings each, dinner tonight through Tuesday"],
-      method:"Batch: brown 3 lbs 93% lean grass-fed ground beef in 2 tbsp olive oil with 3 diced bell peppers, 1 diced onion, 2 tsp smoked paprika, 1 tbsp ground cumin, and salt & pepper to taste. Stir in 1 (14.5oz) can diced tomatoes, fold in 4 cups cooked rice. Top each bowl with avocado. Covers Mon–Wed dinners."},
+      ing:["Grass-fed ground beef — 2 lbs","Bell peppers — 2, diced","Onion — 1, diced","Diced tomatoes, no added sugar — 1 (14.5 oz) can","Cooked brown rice — 4 cups (from about 1⅓ cups dry rice, cooked separately)","Smoked paprika — 2 tsp","Ground cumin — 1 tbsp","Salt & pepper — to taste","To serve: about 1¼ cups of the finished mixture (her) / 2 cups (him) per meal — batch makes 3 servings each"],
+      method:"Batch: brown 2 lbs grass-fed ground beef with 2 diced bell peppers, 1 diced onion, 2 tsp smoked paprika, 1 tbsp ground cumin, and salt & pepper to taste. Stir in 1 (14.5oz) can diced tomatoes, fold in 4 cups cooked rice. Covers Mon–Wed dinners."},
     lb:{name:"Smoky Turkey Taco Bowl with Sweet Potato & Peppers", tag:"batch", cooked:"Batch-cooked Wednesday", macroKey:"turkeyLunch",
-      ing:["Ground turkey (93% lean) — 3.5 lbs","Onion — 1, diced","Bell peppers — 2, diced","Diced tomatoes, no added sugar — 1 (28 oz) can","Sweet potato — 3 lbs, diced","Chicken or vegetable broth — 2.5 cups","Chili powder — 2 tbsp","Ground cumin — 1 tbsp","Smoked paprika — 1 tbsp","Garlic powder — 1 tbsp","Brown rice — cook 2 cups dry (yields about 6 cups cooked) alongside the batch, portioned separately, not simmered into the chili — ¼ cup (her) / 1¼ cups (him) per meal","Avocado — ¼ (her) / ½ (him) per meal","To serve: about 1½ cups (her) / 2½ cups (him) per meal — batch makes 4 servings each, dinner tonight (Wednesday) through Saturday lunch"],
-      method:"Batch: brown 3.5 lbs ground turkey with 1 diced onion & 2 diced bell peppers, taco seasoning (2 tbsp chili powder, 1 tbsp ground cumin, 1 tbsp smoked paprika, 1 tbsp garlic powder), 1 (28oz) can diced tomatoes, 3 lbs diced sweet potato + 2.5 cups broth. Simmer 25 min. While it simmers, cook 2 cups dry brown rice separately (about 6 cups cooked) to portion alongside all 4 servings each. Dinner tonight (Wednesday), then lunches Thursday through Saturday."},
+      ing:["Ground turkey (93% lean) — 3 lbs","Onion — 1, diced","Bell peppers — 2, diced","Diced tomatoes, no added sugar — 1 (28 oz) can","Sweet potato — 2.5 lbs, diced","Chicken or vegetable broth — 2 cups","Chili powder — 2 tbsp","Ground cumin — 1 tbsp","Smoked paprika — 1 tbsp","Garlic powder — 1 tbsp","Brown rice — cook 2 cups dry (yields about 6 cups cooked) alongside the batch, portioned separately, not simmered into the chili — ½ cup (her) / 1 cup (him) per meal","Avocado — ¼ (her) / ½ (him) per meal","To serve: about 1 bowl (her) / 1½ bowls (him) per meal — batch makes 4 servings each"],
+      method:"Batch: brown 3 lbs ground turkey with 1 diced onion & 2 diced bell peppers, taco seasoning (2 tbsp chili powder, 1 tbsp ground cumin, 1 tbsp smoked paprika, 1 tbsp garlic powder), 1 (28oz) can diced tomatoes, 2.5 lbs diced sweet potato + 2 cups broth. Simmer 25 min. While it simmers, cook 2 cups dry brown rice separately (about 6 cups cooked) to portion alongside all 4 servings each. Covers Thu–Sun lunches."},
     de:{name:"Chili-Lime Turkey Skillet with Rice & Peppers", tag:"fresh", macroKey:"turkeyFreshDinner",
-      ing:["Ground turkey — 4 oz (her) / 7 oz (him)","Cooked rice — ½ cup (her) / 1.25 cups (him)","Bell pepper & onion, diced — ½ cup (her) / 1 cup (him)","Shredded cheese — 1 oz (her) / 1.5 oz (him)","Olive oil — 1 tbsp","Lime — 1","Chili powder — 1 tsp","Ground cumin — 1 tsp","Salt & pepper — to taste"],
+      ing:["Ground turkey — 4 oz (her) / 7 oz (him)","Cooked rice — ¾ cup (her) / 1.25 cups (him)","Bell pepper & onion, diced — ½ cup (her) / 1 cup (him)","Shredded cheese — 1 oz (her) / 1.5 oz (him)","Olive oil — 1 tbsp","Lime — 1","Chili powder — 1 tsp","Ground cumin — 1 tsp","Salt & pepper — to taste"],
       method:"Quick weeknight skillet (~20 min): brown turkey with peppers, lime & chili-cumin, stir through rice, top with cheese. Cooked fresh Thursday."},
-    dc:{name:"Southwest Chicken & Rice Bowl with Avocado-Lime Crema", tag:"fresh", macroKey:"southwestBowlDinner",
-      ing:["Cooked chicken, sliced — 4 oz (her) / 8 oz (him)","Cooked rice — ⅔ cup (her) / 1 cup (him)","Bell peppers, sautéed — ⅔ cup (her) / 1 cup (him)","Avocado — ¼ (her) / ½ (him)","Plain Greek yogurt — 2 tbsp (her) / ¼ cup (him)","Lime — 1","Ground cumin — 1 tsp","Chili powder — 1 tsp","Salt & pepper — to taste"],
-      method:"Sauté the peppers in a splash of oil with the cumin and chili powder. Blend the avocado, yogurt, lime juice and a pinch of salt into a crema. Build the bowl: rice, chicken, peppers, and a generous drizzle of the crema."},
     db:{name:"Chili-Lime Baked Salmon with Sweet Potato & Asparagus", tag:"fresh", macroKey:"salmonDinner",
-      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Sweet potato, diced — ½ cup (her) / 2 cups (him)","Asparagus — 1.5 cups (her) / 1.5 cups (him)","Olive oil — 1 tbsp","Lime — 1","Chili powder — 1 tsp","Salt & pepper — to taste"],
+      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Sweet potato, diced — ¾ cup (her) / 1.5 cups (him)","Asparagus — 1 cup (her) / 1.5 cups (him)","Olive oil — 1 tbsp","Lime — 1","Chili powder — 1 tsp","Salt & pepper — to taste"],
       method:"Roast veg at 425°F 20 min, add salmon (lime + chili rub) for the final 12–15 min until it flakes."},
+    dc:{name:"Southwest Chicken & Rice Bowl with Avocado-Lime Crema", tag:"fresh", macroKey:"southwestBowlDinner",
+      ing:["Cooked chicken, sliced — 4 oz (her) / 8 oz (him)","Cooked rice — ⅔ cup (her) / 1 cup (him)","Bell peppers, sautéed — ⅔ cup (her) / 1 cup (him)","Avocado — ¼ (her) / ½ (him)","Plain Greek yogurt (for crema) — 2 tbsp (her) / ¼ cup (him)","Lime — 1","Ground cumin — 1 tsp","Chili powder — 1 tsp","Salt & pepper — to taste"],
+      method:"Season and cook chicken with cumin/chili powder, slice. Sauté peppers. Whisk yogurt + lime juice + a pinch of chili for the crema. Build the bowl: rice, peppers, chicken, avocado, drizzle of crema."},
+    dd:{name:"Blackened Tilapia with Green Beans & Potato", tag:"fresh", macroKey:"tilapiaDinner",
+      ing:["Tilapia fillet — 5 oz (her) / 7 oz (him)","Diced potato — ¾ cup (her) / 1 cup (him)","Green beans — 1 cup (her) / 1.5 cups (him)","Olive oil — 1 tbsp","Smoked paprika — 1 tsp","Ground cumin — 1 tsp","Chili powder — 1 tsp","Lime — 1"],
+      method:"Roast potato & green beans at 425°F 20 min. Coat tilapia in blackening spice, pan-sear 3 min per side until it flakes."},
     s1:{name:"Greek Yogurt, Berries & Chia", tag:"fresh", macroKey:"s1",
-      ing:["Plain fat-free Greek yogurt — 1 cup (her) / 1.25 cups (him)","Mixed berries — ½ cup (her) / ¾ cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"], method:"Stir together."},
+      ing:["Plain fat-free Greek yogurt — 1 cup (her) / 1.5 cups (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"], method:"Stir together."},
     s2:{name:"Apple + Almond Butter", tag:"fresh", macroKey:"s2",
-      ing:["Apple — 1","Almond butter — 1.5 tbsp (her) / 2 tbsp (him)"], method:"Slice and dip."},
+      ing:["Apple — 1","Almond butter — 1 tbsp (her) / 2 tbsp (him)"], method:"Slice and dip."},
     s3:{name:"Protein Shake", tag:"fresh", macroKey:"s3",
-      ing:["Protein powder — 1 scoop","A2 milk — ½ cup + ½ cup water (her) / ¾ cup (him)","Banana — ½"], method:"Blend or shake."},
+      ing:["Protein powder — 1 scoop","A2 milk — 1 cup","Banana — ½ (her) / 1 (him)"], method:"Blend or shake."},
     s4:{name:"Kefir + Almonds", tag:"fresh", macroKey:"s4",
-      ing:["Plain kefir — ¾ cup (her) / 1.25 cups (him)","Protein powder — ½ scoop","Raw almonds — ½ oz (her) / ½ oz (him)"], method:"Whisk the protein powder into the kefir, almonds alongside."},
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Raw almonds — 1 oz (her) / 1.5 oz (him)"], method:"Pour and portion."},
     s5:{name:"Orange + Hard-Boiled Eggs", tag:"fresh", macroKey:"s5",
       ing:["Orange — 1","Pasture eggs, hard-boiled — 2 (her) / 3 (him)"], method:"Peel and go."},
-    s6:{name:"Protein Chia Pudding", tag:"batch", cooked:"Jarred during Sunday and Wednesday batch prep", macroKey:"s6",
-      ing:["Chia seeds — 1.5 tbsp","A2 milk — ½ cup","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ¼ cup (her) / ⅓ cup (him)","Monk fruit, to taste"],
-      method:"Jarred during batch prep — whisk the chia, milk and protein powder together, top with berries, lid on, fridge at least 3 hours or overnight. Keeps well 4–5 days, so one session's jars last until the next batch day."},
+  },
+  weekly:{
+    "Weekly Basics (buy once)":[["Pasture-raised eggs","2.5 dozen"],["Plain fat-free Greek yogurt","2 (32oz) tubs"],["Kefir, plain","4 (32oz) bottles"],["A2 grass-fed milk","2 quarts"],["Mixed berries, frozen","6 lbs"]],
   },
   trip1:{
-    "Proteins & Dairy":[["Pasture-raised eggs","2.5 dozen"],["Liquid egg whites","2 (16oz) cartons"],["Plain fat-free Greek yogurt","3 (32oz) tubs"],["Kefir, plain","4 (32oz) bottles"],["A2 grass-fed milk","¾ gallon (1 qt + ½ gal)"],["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef, 93% lean","3 lbs"]],
-    "Produce":[["Mixed berries, frozen","6 lbs"],["Sweet potatoes","2 lbs"],["Bell peppers","11"],["Onion","2"],["Diced tomatoes, no added sugar","1 (14.5 oz) can"],["Avocado","3"],["Apple","3"],["Orange","2"],["Banana","3"],["Lime","2"],["Garlic","as needed"]],
+    "Proteins & Dairy":[["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef","2 lbs"]],
+    "Produce":[["Sweet potatoes","2.5 lbs"],["Bell peppers","4"],["Onion","1"],["Avocado","1"],["Apple","3"],["Orange","2"],["Banana","3"],["Lime","2"],["Garlic","as needed"]],
   },
   trip2:{
-    "Proteins & Dairy":[["Ground turkey, 93% lean","4 lbs"],["Chicken breast/thigh (for rice bowl)","¾ lb"],["Salmon fillets","1 lb"],["Shredded cheese","1.5 oz"]],
-    "Produce":[["Sweet potatoes","4 lbs"],["Bell peppers","4"],["Onion","2"],["Diced tomatoes, no added sugar","1 (28 oz) can"],["Chicken or vegetable broth","1 (32oz) carton"],["Asparagus","1 lb"],["Avocados","4"],["Apple","2"],["Orange","2"],["Banana","3"],["Lime","3"],["Garlic","as needed"]],
+    "Proteins & Dairy":[["Ground turkey, 93% lean","3.5 lbs"],["Chicken breast/thigh (for rice bowl)","¾ lb"],["Salmon fillets","1 lb"],["Tilapia fillets","1 lb"],["Shredded cheese","1.5 oz"]],
+    "Produce":[["Sweet potatoes","3.5 lbs"],["Bell peppers","5"],["Onion","1"],["Potatoes, regular","1 lb"],["Asparagus","¾ lb"],["Green beans","¾ lb"],["Avocados","4"],["Apple","2"],["Orange","2"],["Banana","3"],["Lime","4"],["Garlic","as needed"]],
   },
 };
 
@@ -491,54 +493,57 @@ const week4 = {
   name:"Week 4", theme:"Ginger & Sesame",
   blurb:"Ginger, garlic, scallion & sesame in place of the herb/chili/lemon flavors — same portions, same targets.",
   recipes:{
-    bf1:{name:"Egg & Veggie Scramble + Avocado Toast", tag:"fresh", macroKey:"eggBF",
-      ing:["Pasture eggs — 2 (her) / 3 (him)","Liquid egg whites — ¼ cup (her) / ⅓ cup (him)","Diced bell pepper & spinach — 1 cup (her) / 1.5 cups (him)","Grass-fed butter — 1 tsp","Stone-mill wheat toast — 1 slice (her) / 2 (him)","Avocado — ¼ (her) / ½ (him)"],
-      method:"Sauté veggies in butter 3 min, add whole eggs + whites together, scramble. Serve with toast + avocado."},
-    bf2:{name:"Overnight Protein Oats with Berries & Chia", tag:"batch", cooked:"Jarred the night before, during batch prep", macroKey:"oatsBF",
-      ing:["Dry oats — ⅓ cup (her) / ⅔ cup (him)","A2 milk — ½ cup (her) / 1 cup (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ⅓ cup (her) / ¾ cup (him)","Chia seeds — 1.5 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"],
-      method:"Jarred at the end of Sunday and Wednesday batch prep for the next morning. Per jar: stir oats, milk, protein powder and chia together, top with berries, lid on, fridge overnight. Eat cold straight from the jar — nothing to cook."},
+    bf1:{name:"Scallion Veggie Egg Scramble + Avocado Toast", tag:"fresh", macroKey:"eggBF",
+      ing:["Pasture eggs — 2 (her) / 3 (him)","Diced bell pepper & scallion — ½ cup (her) / 1 cup (him)","Grass-fed butter — 1 tsp","Stone-mill wheat toast — 1 slice (her) / 2 (him)","Avocado — ¼ (her) / ½ (him)"],
+      method:"Sauté veggies in butter 3 min, add eggs, scramble. Serve with toast + avocado."},
+    bf2:{name:"Protein Oatmeal with Berries & Chia", tag:"fresh", macroKey:"oatsBF",
+      ing:["Dry oats — ½ cup (her) / ¾ cup (him)","A2 milk — ¼ cup (her) / ½ cup (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"],
+      method:"Cook oats in milk + water, stir in protein powder off-heat, top with berries + chia."},
     bf3:{name:"Kefir Berry Protein Smoothie", tag:"fresh", macroKey:"smoothieBF",
-      ing:["Plain kefir — 1 cup (her) / 2 cups (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — 1 cup (her) / 1.5 cups (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Banana — ½ (him only)","Ice"],
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — 1 cup (her) / 1.5 cups (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Banana — ½ (him only)","Ice"],
       method:"Blend everything until smooth."},
     la:{name:"Ginger-Garlic Chicken Thigh Bowl with Broccoli", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"chickenLunch",
-      ing:["Chicken thighs — 5 oz (her) / 8 oz (him)","Sweet potato — ½ cup (her) / 1.5 cups (him)","Broccoli — 1.5 cups (her) / 2 cups (him)","Olive oil — 2 tbsp","Fresh ginger — 1 tbsp, grated","Garlic — 3 cloves, minced","Low-sodium tamari — 3 tbsp","Salt & pepper — to taste"],
-      method:"Batch: 2.5 lbs chicken thighs + 2 lbs sweet potato + 2.25 lbs broccoli, tossed in oil/ginger/garlic/tamari, roasted 425°F 25–30 min. Covers Mon–Wed lunches."},
+      ing:["Chicken thighs — 5 oz (her) / 8 oz (him)","Sweet potato — 1 cup (her) / 1.5 cups (him)","Broccoli — 1 cup (her) / 1.5 cups (him)","Olive oil — 2 tbsp","Fresh ginger — 1 tbsp, grated","Garlic — 3 cloves, minced","Low-sodium tamari — 3 tbsp","Salt & pepper — to taste"],
+      method:"Batch: 2.5 lbs chicken thighs + 2.5 lbs sweet potato + 1.75 lbs broccoli, tossed in oil/ginger/garlic/tamari, roasted 425°F 25–30 min. Covers Mon–Wed lunches."},
     da:{name:"Ginger-Garlic Beef & Rice Skillet with Peppers", tag:"batch", cooked:"Batch-cooked Sunday", macroKey:"beefDinner",
-      ing:["Grass-fed ground beef, 93% lean — 3 lbs","Bell peppers — 3, diced","Onion — 1, diced","Diced tomatoes, no added sugar — 1 (14.5 oz) can","Cooked brown rice — 4 cups (from about 1⅓ cups dry rice, cooked separately)","Olive oil — 2 tbsp (93% lean needs it to brown)","Avocado — ¼ (her) / ½ (him) per meal","Fresh ginger — 1 tbsp, grated","Garlic — 3 cloves, minced","Low-sodium tamari — 3 tbsp","To serve: about 1½ cups of the finished mixture (her) / 2½ cups (him) per meal, topped with the avocado — batch makes 3 servings each, dinner tonight through Tuesday"],
-      method:"Batch: brown 3 lbs 93% lean grass-fed ground beef in 2 tbsp olive oil with 3 diced bell peppers, 1 diced onion, 1 tbsp grated fresh ginger, 3 cloves minced garlic, and 3 tbsp low-sodium tamari. Stir in 1 (14.5oz) can diced tomatoes, fold in 4 cups cooked rice. Top each bowl with avocado. Covers Mon–Wed dinners."},
-    lb:{name:"Coconut Curry Chicken & Sweet Potato", tag:"batch", cooked:"Batch-cooked Wednesday", macroKey:"turkeyLunch",
-      ing:["Chicken thighs, boneless skinless — 3 lbs, in chunks","Sweet potato — 3 lbs, diced","Light coconut milk — 1 (13.5 oz) can","Chicken broth — 2.5 cups","Curry powder — 2 tbsp","Fresh ginger — 1 tbsp, grated","Garlic — 4 cloves, minced","Baby spinach — 5 oz","Lime — 1, juiced","Salt & pepper — to taste","Brown rice — cook 2 cups dry (about 6 cups cooked) alongside the batch, portioned separately, not simmered into the curry — ¼ cup (her) / 1¼ cups (him) per meal","To serve: about 1½ cups of curry (her) / 2½ cups (him) per meal — batch makes 4 servings each, dinner tonight (Wednesday) through Saturday lunch"],
-      method:"Batch: brown 3 lbs chunked chicken thighs, stir in 4 cloves minced garlic, 1 tbsp grated fresh ginger and 2 tbsp curry powder for a minute, then add 1 (13.5oz) can light coconut milk, 2.5 cups broth and 3 lbs diced sweet potato. Simmer 25 min until the sweet potato is tender, then stir in 5 oz baby spinach and the juice of 1 lime. While it simmers, cook 2 cups dry brown rice separately (about 6 cups cooked) to portion alongside all 4 servings each. Dinner tonight (Wednesday), then lunches Thursday through Saturday."},
-    de:{name:"Gochujang Beef & Creamy Broth Rice Bowl", tag:"fresh", macroKey:"gochujangDinner",
-      ing:["Grass-fed ground beef, 93% lean — 4.5 oz (her) / 8 oz (him)","Cottage cheese — ½ cup","Chicken broth — ¾ cup","Light coconut milk — ½ cup","Gochujang — 2 tbsp","Maple syrup — 1 tbsp","Coconut aminos — 1 tbsp","Rice vinegar — 1 tbsp","Toasted sesame oil — 1½ tsp","White miso paste — 1½ tsp","Avocado oil — 1 tsp","Cooked rice — ¼ cup (her) / ⅔ cup (him)","Broccoli, steamed — 1 cup (her) / 1.5 cups (him)","Cucumber, sliced — ½ cup (her) / ¾ cup (him)","Scallions — 2, sliced","Sesame seeds — 1 tsp","Chili crunch — 1 tsp each"],
-      method:"Blend the cottage cheese, broth, coconut milk and gochujang until smooth, pour into a saucepan and warm over low heat, stirring — don't let it boil. Brown the beef in avocado oil, breaking it apart. Whisk the maple syrup, coconut aminos, rice vinegar, sesame oil and miso together, pour over the beef and cook 1–2 min until it caramelizes. Build each bowl: rice, beef, broccoli and cucumber, a ladle of the broth, then scallion, sesame seeds and chili crunch. Cooked fresh Thursday."},
-    dc:{name:"Sesame-Ginger Chicken & Brami Noodle Salad", tag:"fresh", macroKey:"capreseDinner",
-      ing:["Brami protein pasta — 1.5 oz dry (her) / 3 oz (him)","Cooked chicken, sliced — 3 oz (her) / 6 oz (him)","Broccoli slaw — 1 cup (her) / 1.5 cups (him)","Scallion & sesame seeds — 1 tbsp (her) / 1.5 tbsp (him)","Toasted sesame oil — 2 tbsp","Fresh ginger, grated — 1 tsp","Garlic, minced — 2 cloves","Low-sodium tamari — 2 tbsp","Lime — 1"],
-      method:"Cook the Brami pasta per package, drain and cool slightly. Toss with the sliced chicken and broccoli slaw. Whisk the sesame oil, ginger, garlic, tamari and lime juice into a dressing, pour over, and finish with scallion and sesame seeds."},
+      ing:["Grass-fed ground beef — 2 lbs","Bell peppers — 2, diced","Onion — 1, diced","Diced tomatoes, no added sugar — 1 (14.5 oz) can","Cooked brown rice — 4 cups (from about 1⅓ cups dry rice, cooked separately)","Fresh ginger — 1 tbsp, grated","Garlic — 3 cloves, minced","Low-sodium tamari — 3 tbsp","To serve: about 1¼ cups of the finished mixture (her) / 2 cups (him) per meal — batch makes 3 servings each"],
+      method:"Batch: brown 2 lbs grass-fed ground beef with 2 diced bell peppers, 1 diced onion, 1 tbsp grated fresh ginger, 3 cloves minced garlic, and 3 tbsp low-sodium tamari. Stir in 1 (14.5oz) can diced tomatoes, fold in 4 cups cooked rice. Covers Mon–Wed dinners."},
+    lb:{name:"Ginger Turkey & Sweet Potato Skillet with Peppers", tag:"batch", cooked:"Batch-cooked Wednesday", macroKey:"turkeyLunch",
+      ing:["Ground turkey (93% lean) — 3 lbs","Onion — 1, diced","Bell peppers — 2, diced","Diced tomatoes, no added sugar — 1 (28 oz) can","Sweet potato — 2.5 lbs, diced","Chicken or vegetable broth — 2 cups","Fresh ginger — 1 tbsp, grated","Garlic — 3 cloves, minced","Low-sodium tamari — ¼ cup","Brown rice — cook 2 cups dry (yields about 6 cups cooked) alongside the batch, portioned separately, not simmered into the chili — ½ cup (her) / 1 cup (him) per meal","Avocado — ¼ (her) / ½ (him) per meal","To serve: about 1 bowl (her) / 1½ bowls (him) per meal — batch makes 4 servings each"],
+      method:"Batch: brown 3 lbs ground turkey with 1 diced onion & 2 diced bell peppers, 1 tbsp grated fresh ginger, 3 cloves minced garlic, and ¼ cup low-sodium tamari. Add 1 (28oz) can diced tomatoes, 2.5 lbs diced sweet potato + 2 cups broth, simmer 25 min. While it simmers, cook 2 cups dry brown rice separately (about 6 cups cooked) to portion alongside all 4 servings each. Covers Thu–Sun lunches."},
+    de:{name:"Sesame-Ginger Turkey Skillet with Rice & Broccoli", tag:"fresh", macroKey:"turkeyFreshDinner",
+      ing:["Ground turkey — 4 oz (her) / 7 oz (him)","Cooked rice — ¾ cup (her) / 1.25 cups (him)","Broccoli, chopped — ½ cup (her) / 1 cup (him)","Shredded cheese or sesame seeds — 1 oz (her) / 1.5 oz (him)","Sesame oil — 1 tbsp","Fresh ginger — 1 tsp, grated","Garlic — 2 cloves, minced","Low-sodium tamari — 2 tbsp"],
+      method:"Quick weeknight skillet (~20 min): brown turkey with broccoli, ginger, garlic & tamari, stir through rice, finish with sesame oil. Cooked fresh Thursday."},
     db:{name:"Foil-Packet Ginger-Garlic Salmon with Broccoli & Sweet Potato", tag:"fresh", macroKey:"salmonDinner",
-      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Sweet potato, diced — ½ cup (her) / 2 cups (him)","Broccoli — 1.5 cups (her) / 1.5 cups (him)","Sesame oil — 1 tbsp","Fresh ginger — 1 tsp, grated","Garlic — 2 cloves, minced","Low-sodium tamari — 2 tbsp"],
+      ing:["Salmon fillet — 5 oz (her) / 8 oz (him)","Sweet potato, diced — ¾ cup (her) / 1.5 cups (him)","Broccoli — 1 cup (her) / 1.5 cups (him)","Sesame oil — 1 tbsp","Fresh ginger — 1 tsp, grated","Garlic — 2 cloves, minced","Low-sodium tamari — 2 tbsp"],
       method:"Build foil packets: veg + salmon + ginger-garlic-tamari glaze, seal, bake 425°F 18–20 min until salmon flakes."},
+    dc:{name:"Sesame-Ginger Chicken & Brami Noodle Salad", tag:"fresh", macroKey:"capreseDinner",
+      ing:["Brami protein pasta — 1.5 oz dry (her) / 3 oz (him)","Cooked chicken, sliced — 3 oz (her) / 6 oz (him)","Shredded broccoli slaw — 1 cup (her) / 1.5 cups (him)","Scallion & sesame seeds — 1 tbsp (her) / 1.5 tbsp (him)","Sesame oil — 2 tbsp","Fresh ginger — 1 tsp, grated","Garlic — 2 cloves, minced","Low-sodium tamari — 2 tbsp","Lime — 1"],
+      method:"Cook pasta per package, cool. Toss with broccoli slaw, scallion, sesame-ginger-tamari dressing. Top with sliced chicken and sesame seeds."},
+    dd:{name:"Sesame-Ginger Tilapia with Green Beans & Potato", tag:"fresh", macroKey:"tilapiaDinner",
+      ing:["Tilapia fillet — 5 oz (her) / 7 oz (him)","Diced potato — ¾ cup (her) / 1 cup (him)","Green beans — 1 cup (her) / 1.5 cups (him)","Sesame oil — 1 tbsp","Fresh ginger — 1 tsp, grated","Garlic — 2 cloves, minced","Low-sodium tamari — 2 tbsp"],
+      method:"Roast potato & green beans at 425°F 20 min. Pan-sear tilapia in sesame oil with ginger-garlic-tamari glaze, 3 min per side."},
     s1:{name:"Greek Yogurt, Berries & Chia", tag:"fresh", macroKey:"s1",
-      ing:["Plain fat-free Greek yogurt — 1 cup (her) / 1.25 cups (him)","Mixed berries — ½ cup (her) / ¾ cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"], method:"Stir together."},
+      ing:["Plain fat-free Greek yogurt — 1 cup (her) / 1.5 cups (him)","Mixed berries — ½ cup (her) / 1 cup (him)","Chia seeds — 1 tbsp (her) / 1.5 tbsp (him)","Monk fruit, to taste"], method:"Stir together."},
     s2:{name:"Apple + Almond Butter", tag:"fresh", macroKey:"s2",
-      ing:["Apple — 1","Almond butter — 1.5 tbsp (her) / 2 tbsp (him)"], method:"Slice and dip."},
+      ing:["Apple — 1","Almond butter — 1 tbsp (her) / 2 tbsp (him)"], method:"Slice and dip."},
     s3:{name:"Protein Shake", tag:"fresh", macroKey:"s3",
-      ing:["Protein powder — 1 scoop","A2 milk — ½ cup + ½ cup water (her) / ¾ cup (him)","Banana — ½"], method:"Blend or shake."},
+      ing:["Protein powder — 1 scoop","A2 milk — 1 cup","Banana — ½ (her) / 1 (him)"], method:"Blend or shake."},
     s4:{name:"Kefir + Almonds", tag:"fresh", macroKey:"s4",
-      ing:["Plain kefir — ¾ cup (her) / 1.25 cups (him)","Protein powder — ½ scoop","Raw almonds — ½ oz (her) / ½ oz (him)"], method:"Whisk the protein powder into the kefir, almonds alongside."},
+      ing:["Plain kefir — 1 cup (her) / 1.5 cups (him)","Raw almonds — 1 oz (her) / 1.5 oz (him)"], method:"Pour and portion."},
     s5:{name:"Orange + Hard-Boiled Eggs", tag:"fresh", macroKey:"s5",
       ing:["Orange — 1","Pasture eggs, hard-boiled — 2 (her) / 3 (him)"], method:"Peel and go."},
-    s6:{name:"Protein Chia Pudding", tag:"batch", cooked:"Jarred during Sunday and Wednesday batch prep", macroKey:"s6",
-      ing:["Chia seeds — 1.5 tbsp","A2 milk — ½ cup","Protein powder — ½ scoop (her) / 1 scoop (him)","Mixed berries — ¼ cup (her) / ⅓ cup (him)","Monk fruit, to taste"],
-      method:"Jarred during batch prep — whisk the chia, milk and protein powder together, top with berries, lid on, fridge at least 3 hours or overnight. Keeps well 4–5 days, so one session's jars last until the next batch day."},
+  },
+  weekly:{
+    "Weekly Basics (buy once)":[["Pasture-raised eggs","2.5 dozen"],["Plain fat-free Greek yogurt","2 (32oz) tubs"],["Kefir, plain","4 (32oz) bottles"],["A2 grass-fed milk","2 quarts"],["Mixed berries, frozen","6 lbs"]],
   },
   trip1:{
-    "Proteins & Dairy":[["Pasture-raised eggs","2.5 dozen"],["Liquid egg whites","2 (16oz) cartons"],["Plain fat-free Greek yogurt","3 (32oz) tubs"],["Kefir, plain","4 (32oz) bottles"],["A2 grass-fed milk","¾ gallon (1 qt + ½ gal)"],["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef, 93% lean","3 lbs"]],
-    "Produce":[["Mixed berries, frozen","6 lbs"],["Sweet potatoes","2 lbs"],["Broccoli","2.25 lbs"],["Bell peppers","5"],["Onion","1"],["Diced tomatoes, no added sugar","1 (14.5 oz) can"],["Avocado","3"],["Apple","2"],["Orange","2"],["Banana","2"],["Fresh ginger root","1 knob"],["Garlic","as needed"]],
+    "Proteins & Dairy":[["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef","2 lbs"]],
+    "Produce":[["Sweet potatoes","2.5 lbs"],["Broccoli","1.75 lbs"],["Bell peppers","2"],["Onion","1"],["Avocado","1"],["Apple","2"],["Orange","2"],["Banana","2"],["Fresh ginger root","1 knob"],["Scallions","1 bunch"],["Garlic","as needed"]],
   },
   trip2:{
-    "Proteins & Dairy":[["Grass-fed ground beef, 93% lean","1 lb"],["Cottage cheese","1 (16oz) tub"],["Chicken thighs, boneless skinless","3 lbs"],["Chicken breast/thigh (for noodle salad)","¾ lb"],["Salmon fillets","1 lb"],["Shredded cheese","2.5 oz"]],
-    "Produce":[["Sweet potatoes","4 lbs"],["Broccoli","2 lbs"],["Cucumber","1"],["Bell peppers","1"],["Baby spinach","5 oz"],["Broccoli slaw mix","1 bag"],["Onion","1"],["Chicken or vegetable broth","1 (32oz) carton"],["Avocados","4"],["Lime","2"],["Apple","2"],["Orange","2"],["Banana","3"],["Scallions","1 bunch"],["Fresh ginger root","2 knobs"],["Garlic","as needed"]],
+    "Proteins & Dairy":[["Ground turkey, 93% lean","3.5 lbs"],["Chicken breast/thigh (for noodle salad)","¾ lb"],["Salmon fillets","1 lb"],["Tilapia fillets","1 lb"],["Shredded cheese","2.5 oz"]],
+    "Produce":[["Sweet potatoes","3.5 lbs"],["Broccoli","1.75 lbs"],["Broccoli slaw mix","1 bag"],["Onion","1"],["Potatoes, regular","1 lb"],["Green beans","¾ lb"],["Avocados","4"],["Apple","2"],["Orange","2"],["Banana","3"],["Scallions","2 bunches"],["Fresh ginger root","2 knobs"],["Garlic","as needed"]],
   },
 };
 
@@ -599,7 +604,6 @@ function renderDay(){
 
   const tot = {him:{cal:0,p:0,c:0,f:0,fb:0}, her:{cal:0,p:0,c:0,f:0,fb:0}};
   Object.values(day.slots).forEach(id=>{
-    if(id === 'EATING_OUT') return;
     const m = MACROS[recipes[id].macroKey];
     ['him','her'].forEach(who=>{
       ['cal','p','c','f','fb'].forEach(k=>{ tot[who][k] = Math.round((tot[who][k] + m[who][k]) * 10) / 10; });
@@ -625,17 +629,6 @@ function renderDay(){
     </div>`;
 
   document.getElementById('meals').innerHTML = Object.entries(day.slots).map(([slot,id])=>{
-    if(id === 'EATING_OUT'){
-      return `<div class="meal eating-out">
-      <div class="meal-head">
-        <div>
-          <div class="meal-slot">${slot}</div>
-          <div class="meal-title">Eating Out 🍽️</div>
-          <div class="meal-cooked">No cooking, no shopping — this one's on the town.</div>
-        </div>
-      </div>
-    </div>`;
-    }
     const r = recipes[id];
     const m = MACROS[r.macroKey];
     return `<div class="meal">
@@ -671,10 +664,8 @@ function renderPrep(){
       <div class="when">Sunday · Batch #1 · ~1.5 hours</div>
       <h3>Main Prep Session</h3>
       <ol>
-        <li><b>${r.la.name}</b> — ${r.la.method} → <b>lunches Mon–Wed</b>.</li>
-        <li><b>${r.da.name}</b> — ${r.da.method} → <b>dinner tonight through Tuesday</b>. Plate straight from the pan for tonight — no separate cooking, no leftovers container yet.</li>
-        <li><b>${r.bf2.name}</b> — jar 2 portions while the oven works: ½ cup oats + ½ cup milk + ½ scoop protein powder + 1.5 tbsp chia (her), ⅔ cup oats + 1 cup milk + 1 scoop protein powder + 1.5 tbsp chia (him) → <b>Monday breakfast</b>.</li>
-        <li><b>${r.s6.name}</b> — jar 2 portions (one per person, same recipe): whisk 1.5 tbsp chia + ½ cup milk + protein powder (½ scoop her / 1 scoop him), top with berries → <b>Tuesday and Wednesday snacks</b>.</li>
+        <li><b>${r.la.name}</b> — ${r.la.method} → <b>lunches Mon–Wed only</b>.</li>
+        <li><b>${r.da.name}</b> — ${r.da.method} → <b>dinners Mon–Wed only</b>.</li>
         <li>Hard-boil eggs and portion berries into daily bags for the first half of the week.</li>
       </ol>
     </div>
@@ -682,36 +673,49 @@ function renderPrep(){
       <div class="when">Wednesday · Batch #2 · ~45 min</div>
       <h3>Mid-Week Prep Session</h3>
       <ol>
-        <li><b>${r.lb.name}</b> — ${r.lb.method} → <b>dinner tonight, then lunches Thu–Sat</b>. Same as Sunday: plate tonight's dinner straight from the pot, container the rest.</li>
-        <li><b>${r.bf2.name}</b> — jar 2 more portions, same amounts as Sunday → <b>Thursday breakfast</b>.</li>
-        <li><b>${r.s6.name}</b> — jar 1 more portion, same recipe as Sunday → <b>Thursday snack</b>.</li>
+        <li><b>${r.lb.name}</b> — ${r.lb.method} → <b>lunches Thu–Sun</b>.</li>
         <li>Hard-boil a fresh batch of eggs and portion berries for the back half of the week.</li>
       </ol>
     </div>
     <div class="fresh-note">
-      <b style="color:#D9A441;">Cooked fresh, same-day, every time:</b> ${r.bf1.name}, ${r.bf3.name}, ${r.de.name} (Thu), ${r.db.name} (Fri), and ${r.dc.name} (Sat). The oats are the one breakfast made ahead — jarred at the end of each batch session for the very next morning, so they never sit more than a night. Longest fridge time is 2 days (chicken/beef batch, Sun night→Tue) or 3 days (turkey batch, Wed night→Sat). <b style="color:#D9A441;">Sunday lunch is left open</b> — no shopping, no cooking, eat out or order in.
+      <b style="color:#D9A441;">Cooked fresh, same-day, every time:</b> all three breakfasts, ${r.de.name} (Thu), ${r.db.name} (Fri), ${r.dc.name} (Sat), and ${r.dd.name} (Sun). Longest fridge time is 3 days (chicken/beef, Sun→Wed) or 4 days (turkey lunch batch, Wed→Sun).
     </div>`;
 }
 
 /* ============================================================
    FIREBASE SYNC SETUP (so you and your wife see the same checklist)
 
-   firebaseConfig and HOUSEHOLD_ID now live in config.js, loaded via
-   a script tag in the head above. See README.md in the repo for full
-   setup steps. Keeping them in a separate file means
-   future app updates (this file) never overwrite your real credentials.
+   1. Go to https://console.firebase.google.com -> "Add project" (free, no card needed).
+   2. In the project: Build > Realtime Database > Create Database > start in TEST MODE.
+   3. Project settings (gear icon, top left) > General tab > "Your apps" > click the
+      </> (web) icon > register an app (nickname doesn't matter, skip hosting).
+   4. It will show you a firebaseConfig object — copy it and paste it in below,
+      replacing the placeholder object.
+   5. Change HOUSEHOLD_ID below to any private string only the two of you know.
+      Test-mode rules are open to anyone with your database URL, so this string
+      is what keeps your data separate from a random stranger poking the same URL.
+   6. IMPORTANT: test-mode rules auto-expire after 30 days. Before that, go to
+      Realtime Database > Rules and set:
+        { "rules": { ".read": true, ".write": true } }
+      (fine for a private two-person tool — don't share the config publicly).
 
-   Until config.js has real values, the app runs fine using localStorage
-   only (no cross-device sync) — see the fallback check below.
+   Until you do this, the app runs fine using localStorage only (no cross-device sync).
    ============================================================ */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+const HOUSEHOLD_ID = "change-me-to-something-private-123";
 
 let dbRoot = null;
 let syncEnabled = false;
 try{
-  const hasConfig = typeof firebaseConfig !== 'undefined'
-    && typeof HOUSEHOLD_ID !== 'undefined'
-    && firebaseConfig.apiKey !== "YOUR_API_KEY";
-  if(hasConfig && typeof firebase !== 'undefined'){
+  if(firebaseConfig.apiKey !== "YOUR_API_KEY" && typeof firebase !== 'undefined'){
     firebase.initializeApp(firebaseConfig);
     dbRoot = firebase.database().ref('weeklyBoard/' + HOUSEHOLD_ID);
     syncEnabled = true;
@@ -831,6 +835,7 @@ function wireChecklist(containerId, countElId, storageKey, state, total){
 function renderGrocery(){
   const wkey = 'week' + (currentWeek + 1);
   initGroceryList('groceryPantry', 'countPantry', 'grocery:pantry', PANTRY, 'pantry');
+  initGroceryList('groceryWeekly', 'countWeekly', 'grocery:' + wkey + ':weekly', WEEKS[currentWeek].weekly, 'weekly');
   initGroceryList('groceryTrip1', 'countTrip1', 'grocery:' + wkey + ':trip1', WEEKS[currentWeek].trip1, 'trip1');
   initGroceryList('groceryTrip2', 'countTrip2', 'grocery:' + wkey + ':trip2', WEEKS[currentWeek].trip2, 'trip2');
 }
@@ -841,6 +846,7 @@ document.querySelectorAll('.reset-link').forEach(btn=>{
     const wkey = 'week' + (currentWeek + 1);
     let storageKey, containerId, countElId, data;
     if(which==='pantry'){ storageKey='grocery:pantry'; containerId='groceryPantry'; countElId='countPantry'; data=PANTRY; }
+    if(which==='weekly'){ storageKey='grocery:'+wkey+':weekly'; containerId='groceryWeekly'; countElId='countWeekly'; data=WEEKS[currentWeek].weekly; }
     if(which==='trip1'){ storageKey='grocery:'+wkey+':trip1'; containerId='groceryTrip1'; countElId='countTrip1'; data=WEEKS[currentWeek].trip1; }
     if(which==='trip2'){ storageKey='grocery:'+wkey+':trip2'; containerId='groceryTrip2'; countElId='countTrip2'; data=WEEKS[currentWeek].trip2; }
     saveChecklist(storageKey, {});
