@@ -278,7 +278,7 @@
     </div>
     <div class="grocery-grid" id="groceryTrip2"></div>
 
-    <p class="g-note">Eggs, egg whites, Greek yogurt, kefir, milk, and frozen berries are only on Trip 1's list — they keep well past Wednesday, so there's no need to buy them twice. Everything else fresh (meat, fish, produce, cheese) is split across the two trips so it stays close to its purchase date. The pantry list (rice, oats, pasta, nuts, spices, protein powder, canned tomatoes, broth) is shelf-stable — grab it whenever's convenient. Rice shows up in 3 recipes a week, so the 7–8 lb total is for the whole 4-week rotation, not one trip. A few items — fresh mozzarella, basil, asparagus/green beans, cherry tomatoes — are easy Whole Foods or Target add-ons if Aldi doesn't have them that week. Checked-off items are saved automatically.</p>
+    <p class="g-note">Eggs, egg whites, Greek yogurt, kefir, milk, and frozen berries are only on Trip 1's list — they keep well past Wednesday, so there's no need to buy them twice. Everything else fresh (meat, fish, produce, cheese) is split across the two trips so it stays close to its purchase date. The pantry list (rice, oats, pasta, nuts, spices, protein powder) covers items needed every week and is shelf-stable — grab it whenever's convenient. Items only needed for one week's rotation (canned tomatoes, broth, and any week-specific flavor ingredients like gochujang or almond flour) show up in that week's own Trip 1 "Pantry" section instead, sized just for that week. Rice shows up in 3 recipes a week, so the 7–8 lb total is for the whole 4-week rotation, not one trip. A few items — fresh mozzarella, basil, asparagus/green beans, cherry tomatoes — are easy Whole Foods or Target add-ons if Aldi doesn't have them that week. Checked-off items are saved automatically.</p>
   </section>
 
   <footer>MACROS ARE ESTIMATES · EXPECT ±10% REAL-WORLD VARIANCE</footer>
@@ -318,9 +318,8 @@ const DAYS = [
 
 const PANTRY = {
   "Grains, Pasta & Baking":[["Brown rice","6–7 lb (2 bags)"],["Rolled oats","1 container"],["Brami protein pasta","1 box"],["Stone-mill wheat bread","1 loaf"]],
-  "Nuts, Seeds & Fats":[["Chia seeds","2 bags"],["Raw almonds","8 oz"],["Almond butter","1 jar"],["Olive oil","—"],["Toasted sesame oil","1 small bottle (Week 4)"],["Sesame seeds","1 small bag (Week 4)"],["Grass-fed butter","1 stick"],["Avocado oil","1 bottle"],["Almond flour","1 bag (Week 2)"]],
-  "Other":[["Protein powder","2–3 tubs"],["Monk fruit sweetener","—"],["Garlic powder","1 jar"],["Paprika","1 jar"],["Smoked paprika","1 jar"],["Dried thyme","1 jar"],["Dried oregano","1 jar"],["Ground cumin","1 jar"],["Chili powder","1 jar"],["Ground ginger","1 jar"],["Balsamic vinegar","—"],["Low-sodium tamari or coconut aminos","1 bottle"],["Gochujang","1 tub (Week 4)"],["White miso paste","1 small tub (Week 4)"],["Rice vinegar","1 bottle (Week 4)"],["Maple syrup","1 small bottle (Week 4)"],["Chili crunch","1 jar (Week 4)"],["Curry powder","1 jar (Week 4)"],["Light coconut milk","2 (13.5oz) cans (Week 4)"],["Arrowroot starch","1 small bag (Week 1)"]],
-  "Canned & Broth":[["Diced tomatoes, no added sugar","4 (14.5oz) + 3 (28oz) cans"],["Chicken or vegetable broth","3 (32oz) cartons"]],
+  "Nuts, Seeds & Fats":[["Chia seeds","2 bags"],["Raw almonds","8 oz"],["Almond butter","1 jar"],["Olive oil","—"],["Grass-fed butter","1 stick"],["Avocado oil","1 bottle"]],
+  "Other":[["Protein powder","2–3 tubs"],["Monk fruit sweetener","—"],["Garlic powder","1 jar"],["Paprika","1 jar"],["Smoked paprika","1 jar"],["Dried thyme","1 jar"],["Dried oregano","1 jar"],["Ground cumin","1 jar"],["Chili powder","1 jar"],["Ground ginger","1 jar"],["Balsamic vinegar","—"],["Low-sodium tamari or coconut aminos","1 bottle"]],
 };
 
 const week1 = {
@@ -371,6 +370,7 @@ const week1 = {
   trip1:{
     "Proteins & Dairy":[["Pasture-raised eggs","2.5 dozen"],["Liquid egg whites","2 (16oz) cartons"],["Plain fat-free Greek yogurt","3 (32oz) tubs"],["Kefir, plain","4 (32oz) bottles"],["A2 grass-fed milk","¾ gallon (1 qt + ½ gal)"],["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef, 93% lean","3 lbs"]],
     "Produce":[["Mixed berries, frozen","6 lbs"],["Sweet potatoes","2 lbs"],["Broccoli","2.25 lbs"],["Bell peppers","4"],["Onion","1"],["Avocado","4"],["Apple","2"],["Orange","2"],["Banana","1"],["Spinach or mixed greens","1 small bag"],["Garlic","as needed"]],
+    "Pantry":[["Diced tomatoes, no added sugar","1 (14.5oz) can + 1 (28oz) can"],["Chicken or vegetable broth","1 (32oz) carton"]],
   },
   trip2:{
     "Proteins & Dairy":[["Ground turkey, 93% lean","4 lbs"],["Chicken breast/thigh (for caprese)","¾ lb"],["Salmon fillets","1 lb"],["Fresh mozzarella","3 oz"],["Shredded cheese","2.5 oz"]],
@@ -426,6 +426,7 @@ const week2 = {
   trip1:{
     "Proteins & Dairy":[["Pasture-raised eggs","2.5 dozen"],["Liquid egg whites","2 (16oz) cartons"],["Plain fat-free Greek yogurt","3 (32oz) tubs"],["Kefir, plain","4 (32oz) bottles"],["A2 grass-fed milk","¾ gallon (1 qt + ½ gal)"],["Ground chicken","2.5 lbs"],["Grass-fed ground beef, 93% lean","3 lbs"],["Feta","4 oz"]],
     "Produce":[["Mixed berries, frozen","6 lbs"],["Zucchini","2.5 lbs"],["Cherry tomatoes","1 pint"],["Tomato, for scramble","2"],["Onion","1"],["Avocado","3"],["Apple","2"],["Orange","2"],["Banana","2"],["Spinach or mixed greens","1 small bag"],["Lemon","2"],["Garlic","as needed"]],
+    "Pantry":[["Diced tomatoes, no added sugar","1 (14.5oz) can + 1 (28oz) can"],["Chicken or vegetable broth","1 (32oz) carton"],["Almond flour","1 bag"]],
   },
   trip2:{
     "Proteins & Dairy":[["Ground turkey, 93% lean","4 lbs"],["Chicken breast/thigh (for pasta salad)","¾ lb"],["Salmon fillets","1 lb"],["Feta or mozzarella","3 oz"],["Shredded cheese","1.5 oz"]],
@@ -481,6 +482,7 @@ const week3 = {
   trip1:{
     "Proteins & Dairy":[["Pasture-raised eggs","2.5 dozen"],["Liquid egg whites","2 (16oz) cartons"],["Plain fat-free Greek yogurt","3 (32oz) tubs"],["Kefir, plain","4 (32oz) bottles"],["A2 grass-fed milk","¾ gallon (1 qt + ½ gal)"],["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef, 93% lean","3 lbs"]],
     "Produce":[["Mixed berries, frozen","6 lbs"],["Sweet potatoes","2 lbs"],["Bell peppers","11"],["Onion","2"],["Avocado","3"],["Apple","3"],["Orange","2"],["Banana","3"],["Lime","2"],["Garlic","as needed"]],
+    "Pantry":[["Diced tomatoes, no added sugar","1 (14.5oz) can + 1 (28oz) can"],["Chicken or vegetable broth","1 (32oz) carton"]],
   },
   trip2:{
     "Proteins & Dairy":[["Ground turkey, 93% lean","4 lbs"],["Chicken breast/thigh (for rice bowl)","¾ lb"],["Salmon fillets","1 lb"],["Shredded cheese","1.5 oz"]],
@@ -536,6 +538,7 @@ const week4 = {
   trip1:{
     "Proteins & Dairy":[["Pasture-raised eggs","2.5 dozen"],["Liquid egg whites","2 (16oz) cartons"],["Plain fat-free Greek yogurt","3 (32oz) tubs"],["Kefir, plain","4 (32oz) bottles"],["A2 grass-fed milk","¾ gallon (1 qt + ½ gal)"],["Chicken thighs, boneless skinless","2.5 lbs"],["Grass-fed ground beef, 93% lean","3 lbs"]],
     "Produce":[["Mixed berries, frozen","6 lbs"],["Sweet potatoes","2 lbs"],["Broccoli","2.25 lbs"],["Bell peppers","5"],["Onion","1"],["Avocado","3"],["Apple","2"],["Orange","2"],["Banana","2"],["Fresh ginger root","1 knob"],["Garlic","as needed"]],
+    "Pantry":[["Diced tomatoes, no added sugar","1 (14.5oz) can"],["Chicken or vegetable broth","1 (32oz) carton"],["Light coconut milk","2 (13.5oz) cans"],["Curry powder","1 jar"],["Gochujang","1 tub"],["White miso paste","1 small tub"],["Rice vinegar","1 bottle"],["Maple syrup","1 small bottle"],["Chili crunch","1 jar"],["Toasted sesame oil","1 small bottle"],["Sesame seeds","1 small bag"]],
   },
   trip2:{
     "Proteins & Dairy":[["Grass-fed ground beef, 93% lean","1 lb"],["Cottage cheese","1 (16oz) tub"],["Chicken thighs, boneless skinless","3 lbs"],["Chicken breast/thigh (for noodle salad)","¾ lb"],["Salmon fillets","1 lb"],["Shredded cheese","2.5 oz"]],
